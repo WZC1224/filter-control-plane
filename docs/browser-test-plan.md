@@ -18,9 +18,10 @@ Chrome DevTools MCP **未接入**（当前会话 `GetMcpTools` 服务器列表�
 2. Screenshot
 3. Console：零 error/warn
 4. A11y：存在 `h1#login-title`；用户名/密码可 Tab
-5. 点登录（admin/admin123）
+5. 点登录（用管理员下发账号；开发自测可用 `.env` 的 `ADMIN_*`）
    - Network：`POST /auth/login` → body.success true
    - 跳转 `/`
+   - 登录表单**不预填**密码
 
 ### B. 任务页
 1. Screenshot 首屏

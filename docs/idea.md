@@ -25,9 +25,9 @@
 
 ## Key Assumptions to Validate
 
-- [ ] 运营愿意换到新入口 —— 找 1 人试用主路径
-- [ ] 单下游（优先 `data818`）足够跑通 —— MVP 只接一家
-- [ ] 任务状态能从现有 API/库可靠汇总 —— 先对一遍现有 order/task 接口
+- [ ] 运营愿意换到新入口 —— 找 1 人试用主路径（清单：[`docs/pilot.md`](pilot.md)）
+- [x] 单下游（优先 `data818`）足够跑通 —— MVP 已接；`data_center` 为可选独占
+- [x] 任务状态能从现有 API/库可靠汇总 —— 列表/详情/统计已对接
 
 ## MVP Scope
 

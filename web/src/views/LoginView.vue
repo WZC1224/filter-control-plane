@@ -12,7 +12,7 @@
       <el-card class="login-card" shadow="never" role="region" aria-labelledby="login-title">
         <template #header>
           <h1 id="login-title" class="login-title">筛选控制台</h1>
-          <p class="login-sub">内部运营 · 登录后管理筛选任务</p>
+          <p class="login-sub">内部运营 · 账号由管理员开通</p>
         </template>
         <el-form
           ref="formRef"
@@ -72,8 +72,8 @@ const route = useRoute()
 const loading = ref(false)
 const formRef = ref<FormInstance>()
 const form = reactive({
-  username: 'admin',
-  password: 'admin123',
+  username: '',
+  password: '',
 })
 
 const rules: FormRules = {

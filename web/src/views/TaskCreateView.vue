@@ -59,7 +59,7 @@
               >
                 <el-button>选择 .txt</el-button>
                 <template #tip>
-                  <div class="el-upload__tip">仅 txt，一行一号</div>
+                  <div class="el-upload__tip">仅 txt，一行一号；须落在类型数量区间内（常见最少 500）</div>
                 </template>
               </el-upload>
             </el-form-item>
@@ -75,7 +75,15 @@
           :title="priceHint"
         />
         <el-alert
-          v-else-if="createForm.filterType && !loadingMeta"
+          v-if="countOutOfRange"
+          class="mb"
+          type="error"
+          :closable="false"
+          show-icon
+          :title="countOutOfRange"
+        />
+        <el-alert
+          v-else-if="createForm.filterType && !loadingMeta && !priceHint"
           class="mb"
           type="warning"
           :closable="false"
@@ -84,7 +92,13 @@
         />
 
         <el-form-item>
-          <el-button type="primary" :loading="creating" native-type="submit" @click="onCreate">
+          <el-button
+            type="primary"
+            :loading="creating"
+            :disabled="!!countOutOfRange"
+            native-type="submit"
+            @click="onCreate"
+          >
             提交任务
           </el-button>
           <el-button @click="$router.push({ name: 'tasks' })">返回列表</el-button>
@@ -155,6 +169,19 @@ const priceHint = computed(() => {
     }
   }
   return parts.join(' · ')
+})
+
+const countOutOfRange = computed(() => {
+  if (lineCount.value == null) return ''
+  const minC = selectedProduct.value?.minCount ?? selectedFilterMeta.value?.min_count
+  const maxC = selectedProduct.value?.maxCount ?? selectedFilterMeta.value?.max_count
+  if (minC != null && lineCount.value < Number(minC)) {
+    return `号码行数 ${lineCount.value} 低于最小 ${minC}，请补足后再提交`
+  }
+  if (maxC != null && lineCount.value > Number(maxC)) {
+    return `号码行数 ${lineCount.value} 超过最大 ${maxC}，请删减后再提交`
+  }
+  return ''
 })
 
 async function countLines(file: File): Promise<number> {

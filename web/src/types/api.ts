@@ -67,6 +67,8 @@ export interface HealthResult {
   tokenKind?: string
   /** 是否配置了 DATA818_AGENT_TOKEN */
   hasAgentToken?: boolean
+  /** data_center：是否配置了 DATA_CENTER_API_KEY */
+  hasApiKey?: boolean
   time?: string
 }
 

@@ -9,6 +9,7 @@
 - Agent：[`AGENTS.md`](AGENTS.md)
 - 计划：[`tasks/plan.md`](tasks/plan.md)
 - 联调：[`docs/data818-integration.md`](docs/data818-integration.md)
+- 试用：[`docs/pilot.md`](docs/pilot.md)
 - API 合同：[`docs/api-contract.md`](docs/api-contract.md)
 
 ## 技术栈
