@@ -1,8 +1,8 @@
 # Spec: filter-control-plane（内部筛选控制台）
 
-> 状态：**已批准（Phase 1）** · Plan/Tasks 已执行增量实现（下载代理流 + pytest + Vue blob）· 2026-07-30  
+> 状态：**已批准（Phase 2 · data-center 独占适配器）** · Plan/Tasks 执行中 · 2026-07-30  
 > 依据：`docs/idea.md` + `docs/decisions.md`  
-> 联调清单：`docs/data818-integration.md`
+> 联调清单：`docs/data818-integration.md` · `docs/data-center-integration.md`
 
 ## Objective
 
@@ -23,6 +23,7 @@
 
 - [x] 本地：未配 `DATA818_*` 时，Mock 模式下登录 → 列表 → 建任务 → 详情全流程可走通
 - [x] 联调：配置有效 `DATA818_BASE_URL` + `DATA818_TOKEN` 后，列表/建任务/查询/下载能打到真实 data818 且错误信息可读（见 `docs/data818-integration.md`；`scripts/smoke_phase1.py` 只读 4/4 PASS，建单路径已验，真实下载待首个已完成单）
+- [x] **Phase 2**：独占 `data_center` 适配器（`X-Api-Key` + JWT）；`DOWNSTREAM` 三选一；公告软降级；pytest 覆盖鉴权分流（真联调见 `docs/data-center-integration.md`）
 - [x] **下载**：`GET /tasks/<taskNo>/download` 由控制平面**代理文件流**；前端 blob 下载；Mock 可下载假文件
 - [x] 账号：控制平面**独立账号**；下游用配置的服务 Token
 - [x] 前端为 Vue 3 + Element Plus，开发态代理后端，生产态 `web/dist` 可由 Flask 托管
@@ -156,11 +157,12 @@ export function listTasksApi(params?: Record<string, string | number | undefined
 
 ### Ask first
 
-- 增加第二个下游（data-center-backend）
+- 增加第二个下游（~~data-center-backend~~ → **已批准独占 env 切换**；并行/按任务分流仍 Ask first）
 - 换库（SQLite → MySQL）、引入 Redis/Mongo
 - 新增 npm/pip 大依赖或换 UI 库
 - 控制平面自建「任务主库」替代纯代理
 - 权限模型升级（多角色/菜单/与 data818 账号打通）
+- **双下游并行**或 UI 切换源（非独占）
 
 ### Never
 
@@ -191,21 +193,22 @@ export function listTasksApi(params?: Record<string, string | number | undefined
 | 项 | 状态 |
 |----|------|
 | 意图 / 决策 / spec | 已有 |
-| Flask MVP + Mock/data818 适配器 | 已有；下载为 `FilePayload` 文件流 |
+| Flask MVP + Mock/data818/data_center 适配器 | 已有；下载为 `FilePayload` 文件流；`DOWNSTREAM` 独占 |
 | Vue3 登录 + 任务页 + blob 下载 | 已有；build 通过 |
 | pytest | **已有**（`pytest -q`） |
-| 真实 data818 联调验证 | **待 token**（清单已写） |
-| Phase 2/3 plan · tasks | 已写并已增量实现 Task 1–5 |
+| 真实 data818 联调验证 | 只读冒烟已过（清单已写） |
+| 真实 data-center 联调 | **待 Key/JWT**（清单已写） |
+| Phase 2 plan · tasks | 独占 data-center；见 `tasks/plan.md` |
 
 ## Open Questions
 
 | 问题 | 结论（2026-07-30） |
 |------|-------------------|
 | 下载体验 | **控制平面代理文件流** |
-| 账号模型 | **独立账号**；下游用 `DATA818_TOKEN` |
-| 联调 vs 测试优先 | 未明示 → Plan 默认：**先 Mock + pytest，再文件流下载，有 token 再联调** |
-| 第二下游 data-center | 仍暂缓；触发条件未定 |
+| 账号模型 | **独立账号**；下游用服务凭证 |
+| 联调 vs 测试优先 | **先 Mock + pytest，有凭证再联调** |
+| 第二下游 data-center | **独占 env 切换已接**；并行分流仍暂缓 |
 
 ---
 
-**下一门禁：** Phase 2/3 见 `tasks/plan.md`、`tasks/todo.md`，批准后再 Implement。
+**下一门禁：** 有 `DATA_CENTER_*` 时跑 `scripts/smoke_phase2_data_center.py` 勾联调清单。

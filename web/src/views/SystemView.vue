@@ -31,7 +31,7 @@
         <el-descriptions-item label="适配器">
           <el-tag
             size="small"
-            :type="health?.adapter === 'data818' ? 'success' : 'info'"
+            :type="isLiveAdapter ? 'success' : 'info'"
             effect="plain"
           >
             {{ health?.adapter || '…' }}
@@ -49,7 +49,7 @@
         <el-descriptions-item label="服务时间(UTC)">
           <span class="mono">{{ health?.time || '-' }}</span>
         </el-descriptions-item>
-        <el-descriptions-item label="下游 Token">
+        <el-descriptions-item label="下游凭证">
           <el-tag
             size="small"
             effect="plain"
@@ -58,6 +58,7 @@
             {{ health?.tokenKind || '—' }}
           </el-tag>
           <el-tag
+            v-if="health?.adapter === 'data818'"
             size="small"
             class="ml"
             effect="plain"
@@ -65,13 +66,22 @@
           >
             agent {{ health?.hasAgentToken ? '已配' : '未配' }}
           </el-tag>
+          <el-tag
+            v-if="health?.adapter === 'data_center'"
+            size="small"
+            class="ml"
+            effect="plain"
+            :type="health?.hasApiKey ? 'success' : 'warning'"
+          >
+            API Key {{ health?.hasApiKey ? '已配' : '未配' }}
+          </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="下游余额">{{ balanceText }}</el-descriptions-item>
         <el-descriptions-item label="前端">
           <span class="mono">web@{{ webVersion }}</span>
         </el-descriptions-item>
         <el-descriptions-item label="说明">
-          登录 JWT + agent_token 双密钥。三方余额与关单需 admin ACL。
+          独占下游（DOWNSTREAM）。data818 需登录 JWT + agent；data_center 需 JWT + X-Api-Key。三方余额与关单需 admin ACL。
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
@@ -118,6 +128,9 @@ const balanceText = computed(() => {
   return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(balanceRaw.value)
 })
 
+const isLiveAdapter = computed(
+  () => health.value?.adapter === 'data818' || health.value?.adapter === 'data_center',
+)
 async function load() {
   loading.value = true
   error.value = ''

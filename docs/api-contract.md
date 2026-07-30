@@ -89,7 +89,7 @@ Query（camelCase）：
   "pageSize": 20,
   "total": 42,
   "data": [ /* Task */ ],
-  "adapter": "mock" | "data818"
+  "adapter": "mock" | "data818" | "data_center"
 }
 ```
 
@@ -121,7 +121,7 @@ Query（camelCase）：
 | countryCode | 是 | |
 | describe | 否 | |
 
-**Out `result`:** `{ "taskNo": "string", "adapter"?: "mock"|"data818" }`（可含下游额外字段，客户端以 `taskNo` 为准）
+**Out `result`:** `{ "taskNo": "string", "adapter"?: "mock"|"data818"|"data_center" }`（可含下游额外字段，客户端以 `taskNo` 为准）
 
 ### `GET /tasks/:taskNo`
 
@@ -158,17 +158,18 @@ Notice 形：`{ id, title, contentMd, bizType, level, publishStatus, createDate,
 {
   "service": "filter-control-plane",
   "version": "0.1.0",
-  "adapter": "mock"|"data818",
+  "adapter": "mock"|"data818"|"data_center",
   "mock": true,
   "tokenKind": "none"|"agent"|"login"|"unknown",
   "hasAgentToken": true,
+  "hasApiKey": false,
   "time": "2026-07-30T06:00:00Z"
 }
 ```
 
 `version` 来自 `config.APP_VERSION`；`time` 为 UTC ISO8601。  
-`tokenKind` 看主 `DATA818_TOKEN`；`hasAgentToken` 看是否配置 `DATA818_AGENT_TOKEN`。818 两套 JWT 密钥：登录口与 `/api/filter/*`（agent）不同。
-
+`tokenKind` 看当前下游主业务 Token；`hasAgentToken` 仅 data818 看 `DATA818_AGENT_TOKEN`；`hasApiKey` 仅 data_center 看 `DATA_CENTER_API_KEY`。  
+独占切换：`DOWNSTREAM=auto|mock|data818|data_center`。
 ### `GET /meta/filter-types` · `GET /meta/countries`
 
 透传下游元数据；形状随适配器，前端容错双命名。稳定化列为远期（加法，不拆现字段）。

@@ -94,11 +94,12 @@ def test_meta_health(client):
     data = resp.get_json()
     assert data['success'] is True
     assert data['result']['service'] == 'filter-control-plane'
-    assert data['result']['adapter'] in ('mock', 'data818')
+    assert data['result']['adapter'] in ('mock', 'data818', 'data_center')
     assert data['result']['version']
     assert 'mock' in data['result']
     assert data['result']['tokenKind'] in ('none', 'agent', 'login', 'unknown')
     assert 'hasAgentToken' in data['result']
+    assert 'hasApiKey' in data['result']
     assert data['result']['time']
 
 

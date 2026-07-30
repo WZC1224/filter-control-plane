@@ -121,6 +121,7 @@ const mobile = ref(false)
 const balanceRaw = ref<number | string | null>(null)
 const tokenKind = ref('')
 const hasAgentToken = ref(true)
+const adapterName = ref('')
 let timer: ReturnType<typeof setInterval> | undefined
 let mq: MediaQueryList | undefined
 
@@ -165,6 +166,7 @@ const balanceText = computed(() => {
 })
 
 const tokenBanner = computed(() => {
+  if (adapterName.value !== 'data818') return null
   if (tokenKind.value === 'agent' && !hasAgentToken.value) {
     return {
       title: '下游仅 agent_token',
@@ -198,9 +200,11 @@ async function loadBalance() {
 async function loadHealth() {
   try {
     const h = await healthApi()
+    adapterName.value = h.adapter || ''
     tokenKind.value = h.tokenKind || ''
     hasAgentToken.value = h.hasAgentToken !== false
   } catch {
+    adapterName.value = ''
     tokenKind.value = ''
     hasAgentToken.value = true
   }

@@ -100,7 +100,7 @@ def normalize_notice(item: dict) -> dict:
 class TaskService:
     @staticmethod
     def adapter_mode() -> str:
-        return 'mock' if settings.use_mock_adapter else 'data818'
+        return settings.adapter_name
 
     @staticmethod
     def list_tasks(data: TaskListSchema) -> dict:

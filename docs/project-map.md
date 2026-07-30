@@ -4,7 +4,7 @@
 
 ## 产品定位
 
-运营统一入口：下任务 → 看进度 → 取结果。控制平面独立账号；下游 HTTP 适配 `data818`。
+运营统一入口：下任务 → 看进度 → 取结果。控制平面独立账号；下游 HTTP 适配 `data818` / `data_center`（`DOWNSTREAM` 独占）。
 
 ## Backend（`app/`）
 
@@ -15,7 +15,7 @@
 | 认证 | `app/api/auth.py` · `app/service/auth.py` · `app/exts/` | JWT；默认 admin |
 | 任务 API | `app/api/tasks.py` · `app/service/task.py` | 列表/创建/详情/下载流 |
 | 元数据 | `app/api/meta.py` | health / filter-types / countries |
-| 适配器 | `app/adapters/` | `FilePayload`；Mock；data818（csv 可跟 resultUrl） |
+| 适配器 | `app/adapters/` | `FilterHttpAdapter`；Mock；data818；data_center（X-Api-Key） |
 | 响应 | `app/utils/response.py` | 与 818 习惯兼容的 envelope |
 
 **模式：** api 不直连下游；下载成功非 JSON。
@@ -39,6 +39,7 @@
 | `test_auth.py` | 登录成败 |
 | `test_tasks.py` | 列表/创建/下载流/鉴权/format |
 | `test_data818_download.py` | resultUrl 拉取、业务错误、filename* 解码 |
+| `test_data_center_adapter.py` | X-Api-Key/JWT 分流、公告软降级、adapter_name |
 | `conftest.py` | 临时 SQLite + 强制 Mock |
 
 命令：`pytest -q`
@@ -49,5 +50,6 @@
 |------|--------|
 | `docs/spec.md` | 改范围 / 验收 |
 | `docs/decisions.md` | 改栈或下游契约 |
-| `docs/data818-integration.md` | 真下游联调 |
+| `docs/data818-integration.md` | data818 真下游联调 |
+| `docs/data-center-integration.md` | data-center 真下游联调 |
 | `tasks/todo.md` | 执行中的任务切片 |

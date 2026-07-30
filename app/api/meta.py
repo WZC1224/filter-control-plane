@@ -12,14 +12,16 @@ bp = Blueprint('meta', __name__, url_prefix='/meta')
 def health():
     from datetime import datetime, timezone
 
+    name = settings.adapter_name
     return Success(
         result={
             'service': 'filter-control-plane',
             'version': getattr(settings, 'APP_VERSION', '0.1.0'),
-            'adapter': 'mock' if settings.use_mock_adapter else 'data818',
-            'mock': settings.use_mock_adapter,
+            'adapter': name,
+            'mock': name == 'mock',
             'tokenKind': settings.data818_token_kind,
             'hasAgentToken': settings.data818_has_agent_token,
+            'hasApiKey': settings.data_center_has_api_key,
             'time': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
         }
     )

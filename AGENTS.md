@@ -6,10 +6,10 @@
 
 ```
 PROJECT: filter-control-plane — 内部筛选控制台（运营工作台 + 薄控制平面）
-STACK: Flask/Pydantic/SQLite + Vue3/Vite/Element Plus；下游 data818 经 adapters
+STACK: Flask/Pydantic/SQLite + Vue3/Vite/Element Plus；下游 data818/data_center 经 adapters（独占 DOWNSTREAM）
 DOCS: docs/spec.md · docs/decisions.md · docs/project-map.md
 COMMANDS: pytest -q | python main.py | cd web && npm run dev | npm run build
-CONSTRAINTS: 不重写筛号引擎；独立账号；下载=代理文件流；Ask before 第二下游/换库
+CONSTRAINTS: 不重写筛号引擎；独立账号；下载=代理文件流；Ask before 双下游并行/换库/任务主库
 TESTS: tests/ 必须先红后绿改行为；提交前 pytest -q
 ```
 
@@ -18,6 +18,6 @@ TESTS: tests/ 必须先红后绿改行为；提交前 pytest -q
 | 任务类型 | 先读 |
 |----------|------|
 | 改 API / 下载 | `docs/project-map.md` Backend + `app/api/tasks.py` + `app/adapters/` + `tests/test_tasks.py` |
-| 改下游对接 | `docs/decisions.md` 契约表 + `app/adapters/data818.py` + `tests/test_data818_download.py` + `docs/data818-integration.md` |
+| 改下游对接 | `docs/decisions.md` + `app/adapters/filter_http.py` + `data818.py` / `data_center.py` + 对应 integration.md |
 | 改前端 | `web/src/layouts/AppLayout.vue` · `web/src/views/*` + `web/src/api/` · Element Plus |
 | 改范围 | `docs/spec.md` Boundaries，先更新 spec 再改代码 |

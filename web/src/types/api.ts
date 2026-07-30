@@ -52,10 +52,12 @@ export interface HealthResult {
   adapter: string
   version?: string
   mock?: boolean
-  /** none | agent | login | unknown — 主 DATA818_TOKEN */
+  /** none | agent | login | unknown — 主业务 Token */
   tokenKind?: string
-  /** 是否配置了 DATA818_AGENT_TOKEN */
+  /** data818：是否配置了 DATA818_AGENT_TOKEN */
   hasAgentToken?: boolean
+  /** data_center：是否配置了 DATA_CENTER_API_KEY */
+  hasApiKey?: boolean
   time?: string
 }
 

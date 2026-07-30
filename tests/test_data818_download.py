@@ -1,4 +1,4 @@
-"""Data818 下载相关：先写失败用例，再补实现（TDD）。"""
+"""Data818 / FilterHttp 下载相关。"""
 import httpx
 import pytest
 
@@ -13,6 +13,25 @@ def data818_settings(monkeypatch):
     monkeypatch.setattr(settings, 'DATA818_TIMEOUT', 5.0)
 
 
+def _mock_client(monkeypatch, handler, *, follow_redirects: bool = False):
+    from app.adapters import filter_http as fh
+
+    transport = httpx.MockTransport(handler)
+    real = httpx.Client(transport=transport, follow_redirects=follow_redirects)
+
+    class _Client:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return real
+
+        def __exit__(self, *args):
+            return False
+
+    monkeypatch.setattr(fh.httpx, 'Client', _Client)
+
+
 def test_filename_from_disposition_decodes_rfc5987(data818_settings):
     from app.adapters.data818 import Data818Adapter
 
@@ -25,7 +44,6 @@ def test_filename_from_disposition_decodes_rfc5987(data818_settings):
 
 
 def test_get_download_follows_result_url(data818_settings, monkeypatch):
-    from app.adapters import data818 as data818_mod
     from app.adapters.data818 import Data818Adapter
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -52,20 +70,7 @@ def test_get_download_follows_result_url(data818_settings, monkeypatch):
             )
         return httpx.Response(404, text='missing')
 
-    transport = httpx.MockTransport(handler)
-    real = httpx.Client(transport=transport, follow_redirects=True)
-
-    class _Client:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def __enter__(self):
-            return real
-
-        def __exit__(self, *args):
-            return False
-
-    monkeypatch.setattr(data818_mod.httpx, 'Client', _Client)
+    _mock_client(monkeypatch, handler, follow_redirects=True)
     adapter = Data818Adapter()
     payload = adapter.get_download('TASK-1', fmt='csv')
     assert payload.content == b'phone,status\n1,ok\n'
@@ -73,7 +78,6 @@ def test_get_download_follows_result_url(data818_settings, monkeypatch):
 
 
 def test_get_download_json_business_error(data818_settings, monkeypatch):
-    from app.adapters import data818 as data818_mod
     from app.adapters.data818 import Data818Adapter
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -83,20 +87,7 @@ def test_get_download_json_business_error(data818_settings, monkeypatch):
             headers={'content-type': 'application/json'},
         )
 
-    transport = httpx.MockTransport(handler)
-    real = httpx.Client(transport=transport)
-
-    class _Client:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def __enter__(self):
-            return real
-
-        def __exit__(self, *args):
-            return False
-
-    monkeypatch.setattr(data818_mod.httpx, 'Client', _Client)
+    _mock_client(monkeypatch, handler)
     adapter = Data818Adapter()
     with pytest.raises(_Exception) as ei:
         adapter.get_download('TASK-1', fmt='csv')
@@ -104,31 +95,16 @@ def test_get_download_json_business_error(data818_settings, monkeypatch):
 
 
 def test_third_balances_soft_fail_on_downstream_500(data818_settings, monkeypatch):
-    from app.adapters import data818 as data818_mod
     from app.adapters.data818 import Data818Adapter
 
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, text='INTERNAL SERVER ERROR')
 
-    transport = httpx.MockTransport(handler)
-    real = httpx.Client(transport=transport)
-
-    class _Client:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def __enter__(self):
-            return real
-
-        def __exit__(self, *args):
-            return False
-
-    monkeypatch.setattr(data818_mod.httpx, 'Client', _Client)
+    _mock_client(monkeypatch, handler)
     assert Data818Adapter().third_balances() == []
 
 
 def test_get_rejects_html_body(data818_settings, monkeypatch):
-    from app.adapters import data818 as data818_mod
     from app.adapters.data818 import Data818Adapter
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -138,20 +114,7 @@ def test_get_rejects_html_body(data818_settings, monkeypatch):
             headers={'content-type': 'text/html'},
         )
 
-    transport = httpx.MockTransport(handler)
-    real = httpx.Client(transport=transport)
-
-    class _Client:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def __enter__(self):
-            return real
-
-        def __exit__(self, *args):
-            return False
-
-    monkeypatch.setattr(data818_mod.httpx, 'Client', _Client)
+    _mock_client(monkeypatch, handler)
     adapter = Data818Adapter()
     with pytest.raises(_Exception) as ei:
         adapter.get_balance()
@@ -159,27 +122,8 @@ def test_get_rejects_html_body(data818_settings, monkeypatch):
     assert 'non-JSON' in str(ei.value.message)
 
 
-def _mock_client(monkeypatch, handler):
-    from app.adapters import data818 as data818_mod
-
-    transport = httpx.MockTransport(handler)
-    real = httpx.Client(transport=transport)
-
-    class _Client:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def __enter__(self):
-            return real
-
-        def __exit__(self, *args):
-            return False
-
-    monkeypatch.setattr(data818_mod.httpx, 'Client', _Client)
-
-
-def test_query_task_uses_login_token(data818_settings, monkeypatch):
-    """task_query 走 /api/filter 前缀 → 用 agent token（同 create/download）。"""
+def test_query_task_uses_agent_token(data818_settings, monkeypatch):
+    """task_query 走 /api/filter 前缀 → 用 agent token。"""
     from app.adapters.data818 import Data818Adapter
 
     seen: dict[str, str] = {}
@@ -199,10 +143,8 @@ def test_query_task_uses_login_token(data818_settings, monkeypatch):
         )
 
     _mock_client(monkeypatch, handler)
-    monkeypatch.setenv('DATA818_AGENT_TOKEN', '')
-    from config import settings as s
-    monkeypatch.setattr(s, 'DATA818_AGENT_TOKEN', 'agent-tok')
-    monkeypatch.setattr(s, 'DATA818_TOKEN', 'login-tok')
+    monkeypatch.setattr(settings, 'DATA818_AGENT_TOKEN', 'agent-tok')
+    monkeypatch.setattr(settings, 'DATA818_TOKEN', 'login-tok')
     adapter = Data818Adapter()
     out = adapter.query_task('TASK-9')
     assert out['taskNo'] == 'TASK-9'
@@ -229,8 +171,7 @@ def test_create_task_multipart_headers(data818_settings, monkeypatch):
         )
 
     _mock_client(monkeypatch, handler)
-    from config import settings as s
-    monkeypatch.setattr(s, 'DATA818_AGENT_TOKEN', 'agent-tok')
+    monkeypatch.setattr(settings, 'DATA818_AGENT_TOKEN', 'agent-tok')
     adapter = Data818Adapter()
     out = adapter.create_task(
         filter_type='wsValid',

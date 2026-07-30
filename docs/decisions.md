@@ -9,10 +9,10 @@
 | 前端目录 | `web/` 独立工程 | 与后端解耦；`vite` 开发代理到 Flask `:5100` |
 | 后端 | Flask + SQLAlchemy + Pydantic，分层对齐 data818 | 延续栈 |
 | 本地库 | SQLite | MVP 零运维 |
-| 下游 | `Data818Adapter` HTTP | 旧系统当下游 |
+| 下游 | `Data818Adapter` / `DataCenterAdapter` HTTP（独占） | 旧系统当下游 |
 | 未配置下游 | `MockAdapter` | 本地可演示 |
 | 默认首页 | 任务列表 + 新建 | 对齐 idea.md |
-| 第二下游 | 暂缓 | 单下游先验证 |
+| 第二下游 | **已接**：`DOWNSTREAM=data_center` 独占切换 | 路径同构；鉴权 API Key + JWT |
 | 完整中台 | 不做 | 见 idea.md |
 
 ## 前端栈明细
@@ -54,7 +54,12 @@
 | `GET /meta/third-balances` | `GET /admin/third_management/get_third_balance` |
 | `POST /auth/change-password` | 控制平面本地用户（不下发下游） |
 
-配置：`DATA818_BASE_URL` + `DATA818_TOKEN`。
+配置：`DOWNSTREAM=auto|mock|data818|data_center`。
+
+- data818：`DATA818_BASE_URL` + `DATA818_TOKEN` + `DATA818_AGENT_TOKEN`
+- data-center：`DATA_CENTER_BASE_URL` + `DATA_CENTER_API_KEY`（`/api/filter*`）+ `DATA_CENTER_TOKEN`（业务面）
+
+data-center **无**公告 `/sys_msg/*`：适配器返回空列表 / 404。
 
 ## 薄平面增量（2026-07-30）
 

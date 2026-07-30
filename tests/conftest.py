@@ -9,8 +9,13 @@ def app(tmp_path, monkeypatch):
     db_file = tmp_path / 'test.db'
     uri = 'sqlite:///' + str(db_file).replace('\\', '/')
     monkeypatch.setattr(settings, 'SQLALCHEMY_DATABASE_URI', uri)
+    monkeypatch.setattr(settings, 'DOWNSTREAM', 'auto')
     monkeypatch.setattr(settings, 'DATA818_BASE_URL', '')
     monkeypatch.setattr(settings, 'DATA818_TOKEN', '')
+    monkeypatch.setattr(settings, 'DATA818_AGENT_TOKEN', '')
+    monkeypatch.setattr(settings, 'DATA_CENTER_BASE_URL', '')
+    monkeypatch.setattr(settings, 'DATA_CENTER_API_KEY', '')
+    monkeypatch.setattr(settings, 'DATA_CENTER_TOKEN', '')
     monkeypatch.setattr(settings, 'ADMIN_USERNAME', 'admin')
     monkeypatch.setattr(settings, 'ADMIN_PASSWORD', 'admin123')
     get_adapter.cache_clear()
