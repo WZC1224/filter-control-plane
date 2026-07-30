@@ -22,7 +22,7 @@
 ### Success Criteria（可验收）
 
 - [x] 本地：未配 `DATA818_*` 时，Mock 模式下登录 → 列表 → 建任务 → 详情全流程可走通
-- [ ] 联调：配置有效 `DATA818_BASE_URL` + `DATA818_TOKEN` 后，列表/建任务/查询/下载能打到真实 data818 且错误信息可读（见 `docs/data818-integration.md`）
+- [x] 联调：配置有效 `DATA818_BASE_URL` + `DATA818_TOKEN` 后，列表/建任务/查询/下载能打到真实 data818 且错误信息可读（见 `docs/data818-integration.md`；`scripts/smoke_phase1.py` 只读 4/4 PASS，建单路径已验，真实下载待首个已完成单）
 - [x] **下载**：`GET /tasks/<taskNo>/download` 由控制平面**代理文件流**；前端 blob 下载；Mock 可下载假文件
 - [x] 账号：控制平面**独立账号**；下游用配置的服务 Token
 - [x] 前端为 Vue 3 + Element Plus，开发态代理后端，生产态 `web/dist` 可由 Flask 托管

@@ -4,10 +4,10 @@
 
 ## 环境
 
-- [ ] `.env` 中填写（从 `.env.example` 复制，**不要**把 Token 写进 example）：
+- [x] `.env` 中填写（从 `.env.example` 复制，**不要**把 Token 写进 example）：
   - `DATA818_BASE_URL`：**API 根**，不是前台站。正确例：`https://api.818gzs.ai`（或 `https://www.818gzs.ai/api`）。填 `https://www.818gzs.ai` 会拿 SPA HTML，列表全挂。
   - `DATA818_TOKEN`（Bearer 可带可不带前缀；服务会自动补 `Bearer `）
-- [ ] 重启 `python main.py` 后 `GET /meta/health` 的 `adapter` 为 `data818`
+- [x] 重启 `python main.py` 后 `GET /meta/health` 的 `adapter` 为 `data818`
 
 ### Token 种类
 
@@ -19,6 +19,23 @@
 | `DATA818_AGENT_TOKEN` | 超管签发 agent_token（常 `exp:null`） | `/api/filter/*`：余额、类型、国家、建任务、查询、下载 |
 
 只配一个 → 另一半接口 `invalid token`。
+
+## 程序化联调（`scripts/smoke_phase1.py`）
+
+```bash
+# 只读冒烟（不建单）：余额/类型/国家/列表 + 若有已完成单自动试下载
+python -m scripts.smoke_phase1
+
+# 完整闭环（会建单扣费，默认 wsValid/AD x min_count）
+python -m scripts.smoke_phase1 --create --yes
+```
+
+已验证（2026-07-30）：
+
+- [x] 余额 / 筛选类型 / 国家 / 任务列表 — 4/4 PASS
+- [x] 建任务路径通（`min_count=500`，低于 500 下游 400 拒绝，未扣费）
+- [x] 查询接口（`task_query`）单测覆盖，agent token 正确透传
+- [x] 下载接口 mock 单测覆盖（resultUrl 拉取 / 201 业务错 / HTML 502）
 
 ## 所需下游权限（ApiPath + 角色）
 

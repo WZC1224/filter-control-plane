@@ -157,3 +157,90 @@ def test_get_rejects_html_body(data818_settings, monkeypatch):
         adapter.get_balance()
     assert ei.value.code == 502
     assert 'non-JSON' in str(ei.value.message)
+
+
+def _mock_client(monkeypatch, handler):
+    from app.adapters import data818 as data818_mod
+
+    transport = httpx.MockTransport(handler)
+    real = httpx.Client(transport=transport)
+
+    class _Client:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return real
+
+        def __exit__(self, *args):
+            return False
+
+    monkeypatch.setattr(data818_mod.httpx, 'Client', _Client)
+
+
+def test_query_task_uses_login_token(data818_settings, monkeypatch):
+    """task_query 走 /api/filter 前缀 → 用 agent token（同 create/download）。"""
+    from app.adapters.data818 import Data818Adapter
+
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen['auth'] = request.headers.get('authorization', '')
+        seen['taskNo'] = request.url.params.get('taskNo', '')
+        return httpx.Response(
+            200,
+            json={
+                'code': 200,
+                'success': True,
+                'message': 'ok',
+                'result': {'taskNo': 'TASK-9', 'status': 1, 'count': 500},
+            },
+            headers={'content-type': 'application/json'},
+        )
+
+    _mock_client(monkeypatch, handler)
+    monkeypatch.setenv('DATA818_AGENT_TOKEN', '')
+    from config import settings as s
+    monkeypatch.setattr(s, 'DATA818_AGENT_TOKEN', 'agent-tok')
+    monkeypatch.setattr(s, 'DATA818_TOKEN', 'login-tok')
+    adapter = Data818Adapter()
+    out = adapter.query_task('TASK-9')
+    assert out['taskNo'] == 'TASK-9'
+    assert out['adapter'] == 'data818'
+    assert seen['taskNo'] == 'TASK-9'
+    assert seen['auth'] == 'Bearer agent-tok'
+
+
+def test_create_task_multipart_headers(data818_settings, monkeypatch):
+    """create_task 必须 multipart 且带 agent Authorization。"""
+    from app.adapters.data818 import Data818Adapter
+    import io
+
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen['auth'] = request.headers.get('authorization', '')
+        seen['ct'] = request.headers.get('content-type', '')
+        seen['body'] = request.content.decode('utf-8', 'replace')
+        return httpx.Response(
+            200,
+            json={'code': 200, 'success': True, 'message': 'ok', 'result': {'taskNo': 'NEW-1'}},
+            headers={'content-type': 'application/json'},
+        )
+
+    _mock_client(monkeypatch, handler)
+    from config import settings as s
+    monkeypatch.setattr(s, 'DATA818_AGENT_TOKEN', 'agent-tok')
+    adapter = Data818Adapter()
+    out = adapter.create_task(
+        filter_type='wsValid',
+        country_code='AD',
+        describe='t',
+        filename='a.txt',
+        file_obj=io.BytesIO(b'37670000001\n'),
+    )
+    assert out['taskNo'] == 'NEW-1'
+    assert seen['auth'] == 'Bearer agent-tok'
+    assert seen['ct'].startswith('multipart/form-data')
+    assert 'wsValid' in seen['body']
+    assert 'name="file"; filename="a.txt"' in seen['body']
