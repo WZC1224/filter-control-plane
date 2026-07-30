@@ -1,0 +1,14 @@
+.env
+fcp.db
+*.db
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.idea/
+.vscode/
+web/node_modules/
+web/dist/
+*.log
+.DS_Store

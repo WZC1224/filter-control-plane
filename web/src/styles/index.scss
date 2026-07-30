@@ -1,0 +1,164 @@
+:root {
+  /* 淡蓝主题 · 白天 */
+  --el-color-primary: #6ba8d9;
+  --el-color-primary-light-3: #8fbee3;
+  --el-color-primary-light-5: #abd0eb;
+  --el-color-primary-light-7: #c7e1f2;
+  --el-color-primary-light-8: #d5e9f6;
+  --el-color-primary-light-9: #e8f3fa;
+  --el-color-primary-dark-2: #5686ae;
+
+  --app-bg: #eef5fb;
+  --app-bg-accent: #dcecf7;
+  --app-aside-start: #dcecf7;
+  --app-aside-mid: #e8f3fa;
+  --app-aside-end: #eef5fb;
+  --app-header-bg: rgba(255, 255, 255, 0.72);
+  --app-surface: rgba(255, 255, 255, 0.75);
+  --app-login-top: #f5fafd;
+  --app-login-mid: #eef5fb;
+  --app-login-bottom: #e3eef8;
+  --app-brand-border: rgba(86, 134, 174, 0.12);
+  --el-bg-color-page: var(--app-bg);
+}
+
+html.dark {
+  /* 只改主色与布局色；light/dark 阶梯跟 Element Plus 暗色约定（light=压暗，dark-2=提亮） */
+  --el-color-primary: #7eb6e0;
+  --el-color-primary-light-3: #5f8fb3;
+  --el-color-primary-light-5: #4a7394;
+  --el-color-primary-light-7: #365774;
+  --el-color-primary-light-8: #2c475f;
+  --el-color-primary-light-9: #23384c;
+  --el-color-primary-dark-2: #9ec9ea;
+
+  --app-bg: #141c24;
+  --app-bg-accent: #1c2a38;
+  --app-aside-start: #182230;
+  --app-aside-mid: #15202c;
+  --app-aside-end: #141c24;
+  --app-header-bg: rgba(20, 28, 36, 0.88);
+  --app-surface: rgba(28, 40, 52, 0.92);
+  --app-login-top: #1a2530;
+  --app-login-mid: #141c24;
+  --app-login-bottom: #101820;
+  --app-brand-border: rgba(126, 182, 224, 0.18);
+  --el-bg-color-page: var(--app-bg);
+  color-scheme: dark;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  min-height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  background: var(--app-bg);
+  color: var(--el-text-color-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.page {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 3rem;
+}
+
+.page-card {
+  margin-bottom: 1rem;
+}
+
+.page-panel {
+  width: 100%;
+  max-width: 72rem;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 0 0.5rem;
+}
+
+@media (min-width: 1280px) {
+  .page-panel {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .page-panel {
+    max-width: 80rem;
+    padding: 0 2.5rem;
+  }
+}
+
+.page-head {
+  margin-bottom: 1rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--el-text-color-primary);
+}
+
+.page-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--el-text-color-secondary);
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+/* 表格卡片：宽表在面板内横滚，不撑破主布局 */
+.page-panel .el-card__body {
+  min-width: 0;
+}
+
+.page-panel .el-table {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 1.125rem;
+  }
+
+  .page-panel {
+    padding: 0;
+  }
+
+  .page-head-row {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .page-head-actions {
+    width: 100%;
+  }
+}
+
+/* 侧栏菜单：避免 EP 默认浅色字色 */
+.app-menu {
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: var(--el-text-color-primary);
+  --el-menu-hover-text-color: var(--el-color-primary);
+  --el-menu-active-color: var(--el-color-primary);
+  --el-menu-hover-bg-color: var(--el-fill-color-light);
+  --el-menu-border-color: transparent;
+}
