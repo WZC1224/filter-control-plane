@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from app.exts.auth_guard import login_required
+from app.exts.auth_guard import admin_required, login_required
 from app.schema.auth import CreateTaskFieldsSchema, TaskListSchema
 from app.service.task import TaskService
 from app.utils.response import Success
@@ -48,19 +48,19 @@ def download(task_no: str):
 
 
 @bp.route('/<task_no>/close', methods=['POST'])
-@login_required
+@admin_required
 def close_task(task_no: str):
     return Success(message='已关闭', result=TaskService.close_task(task_no))
 
 
 @bp.route('/<task_no>/refund', methods=['POST'])
-@login_required
+@admin_required
 def refund_task(task_no: str):
     return Success(message='已退款', result=TaskService.refund_task(task_no))
 
 
 @bp.route('/<task_no>/retry', methods=['POST'])
-@login_required
+@admin_required
 def retry_task(task_no: str):
     return Success(message='已重试', result=TaskService.retry_task(task_no))
 

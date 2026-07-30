@@ -6,9 +6,20 @@ export interface ApiResult<T = unknown> {
   timestamp: number
 }
 
+export type UserRole = 'admin' | 'operator'
+
 export interface LoginResult {
   token: string
   username: string
+  role: UserRole
+}
+
+export interface UserItem {
+  id: number
+  username: string
+  role: UserRole
+  isActive: boolean
+  createdAt?: string | null
 }
 
 /** 控制平面稳定 Task 形（camelCase）。见 docs/api-contract.md */
@@ -52,12 +63,10 @@ export interface HealthResult {
   adapter: string
   version?: string
   mock?: boolean
-  /** none | agent | login | unknown — 主业务 Token */
+  /** none | agent | login | unknown — 主 DATA818_TOKEN */
   tokenKind?: string
-  /** data818：是否配置了 DATA818_AGENT_TOKEN */
+  /** 是否配置了 DATA818_AGENT_TOKEN */
   hasAgentToken?: boolean
-  /** data_center：是否配置了 DATA_CENTER_API_KEY */
-  hasApiKey?: boolean
   time?: string
 }
 

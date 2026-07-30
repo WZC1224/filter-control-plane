@@ -34,7 +34,18 @@ def create_app() -> Flask:
     if WEB_DIST.exists():
         @app.route('/')
         @app.route('/login')
-        def spa_index():
+        @app.route('/users')
+        @app.route('/system')
+        @app.route('/tasks')
+        @app.route('/tasks/create')
+        @app.route('/tasks/<path:_>')
+        @app.route('/orders')
+        @app.route('/products')
+        @app.route('/bills')
+        @app.route('/notices')
+        @app.route('/notices/<path:_>')
+        @app.route('/account')
+        def spa_index(_=None):
             return send_from_directory(WEB_DIST, 'index.html')
 
         @app.route('/assets/<path:filename>')
@@ -51,6 +62,8 @@ def create_app() -> Flask:
     with app.app_context():
         from app import models  # noqa: F401
         db.create_all()
+        from app.exts.schema_migrate import ensure_user_schema
+        ensure_user_schema()
         from app.service.auth import AuthService
         AuthService.ensure_admin()
 

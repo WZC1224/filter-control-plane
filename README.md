@@ -1,6 +1,6 @@
 # filter-control-plane
 
-内部筛选控制台：运营任务工作台 + 薄控制平面（`data818` / `data-center` 独占下游）。
+内部筛选控制台：运营任务工作台 + 薄控制平面（`data818` 等为下游）。
 
 - 意图：[`docs/idea.md`](docs/idea.md)
 - 决策：[`docs/decisions.md`](docs/decisions.md)
@@ -8,7 +8,7 @@
 - 地图：[`docs/project-map.md`](docs/project-map.md)
 - Agent：[`AGENTS.md`](AGENTS.md)
 - 计划：[`tasks/plan.md`](tasks/plan.md)
-- 联调：[`docs/data818-integration.md`](docs/data818-integration.md) · [`docs/data-center-integration.md`](docs/data-center-integration.md)
+- 联调：[`docs/data818-integration.md`](docs/data818-integration.md)
 - API 合同：[`docs/api-contract.md`](docs/api-contract.md)
 
 ## 技术栈
@@ -18,10 +18,7 @@
 | 前端 `web/` | Vue 3 · Vite · TypeScript · Element Plus · Pinia · Vue Router · Axios |
 | 后端 | Flask · SQLAlchemy · Pydantic · httpx |
 
-账号模型：**控制平面独立账号**（默认 `admin` / `admin123`）。  
-下游独占切换：`DOWNSTREAM=auto|mock|data818|data_center`。  
-- data818：`DATA818_TOKEN` + `DATA818_AGENT_TOKEN`  
-- data-center：`DATA_CENTER_API_KEY` + `DATA_CENTER_TOKEN`  
+账号模型：**控制平面独立账号**（默认 `admin` / `admin123`，角色 `admin`）。支持多用户：`admin` / `operator`，见 [`docs/phase2-users.md`](docs/phase2-users.md)。下游需双 Token：`DATA818_TOKEN`（登录 JWT）+ `DATA818_AGENT_TOKEN`（agent），见 [`docs/data818-integration.md`](docs/data818-integration.md)。
 
 下载：**控制平面代理文件流**（`Content-Disposition` 附件）；前端 blob 保存。Query `format=csv|txt|xlsx|invalid`（默认 `csv`）。
 

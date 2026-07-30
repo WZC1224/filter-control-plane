@@ -6,9 +6,9 @@ from config import settings
 
 
 class JWTAuth:
-    def create_token(self, user_id: int, username: str) -> str:
+    def create_token(self, user_id: int, username: str, role: str = 'operator') -> str:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
-        payload = {'user_id': user_id, 'username': username, 'exp': expire}
+        payload = {'user_id': user_id, 'username': username, 'role': role, 'exp': expire}
         return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
     def verify(self, raw_header: str) -> tuple[bool, dict | str]:

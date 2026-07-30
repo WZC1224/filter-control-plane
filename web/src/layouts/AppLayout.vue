@@ -50,11 +50,15 @@
           <el-icon><Bell /></el-icon>
           <span>公告</span>
         </el-menu-item>
+        <el-menu-item v-if="user.isAdmin" index="/users">
+          <el-icon><UserFilled /></el-icon>
+          <span>用户</span>
+        </el-menu-item>
         <el-menu-item index="/account">
           <el-icon><User /></el-icon>
           <span>账号</span>
         </el-menu-item>
-        <el-menu-item index="/system">
+        <el-menu-item v-if="user.isAdmin" index="/system">
           <el-icon><Setting /></el-icon>
           <span>系统</span>
         </el-menu-item>
@@ -78,7 +82,7 @@
         <el-tag v-if="balanceText !== null" size="small" effect="plain" type="primary" class="bal">
           余额 {{ balanceText }}
         </el-tag>
-        <span class="who">{{ user.username }}</span>
+        <span class="who">{{ user.username }}<template v-if="user.role"> · {{ user.role }}</template></span>
         <el-button text type="primary" @click="onLogout">退出</el-button>
       </el-header>
       <el-main class="app-main">
@@ -104,7 +108,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Bell, Expand, Fold, Goods, List, Moon, Odometer, Plus, Setting, Sunny, Ticket, User, Wallet } from '@element-plus/icons-vue'
+import { Bell, Expand, Fold, Goods, List, Moon, Odometer, Plus, Setting, Sunny, Ticket, User, UserFilled, Wallet } from '@element-plus/icons-vue'
 import { balanceApi, healthApi } from '@/api/meta'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
@@ -121,7 +125,6 @@ const mobile = ref(false)
 const balanceRaw = ref<number | string | null>(null)
 const tokenKind = ref('')
 const hasAgentToken = ref(true)
-const adapterName = ref('')
 let timer: ReturnType<typeof setInterval> | undefined
 let mq: MediaQueryList | undefined
 
@@ -166,7 +169,6 @@ const balanceText = computed(() => {
 })
 
 const tokenBanner = computed(() => {
-  if (adapterName.value !== 'data818') return null
   if (tokenKind.value === 'agent' && !hasAgentToken.value) {
     return {
       title: '下游仅 agent_token',
@@ -200,11 +202,9 @@ async function loadBalance() {
 async function loadHealth() {
   try {
     const h = await healthApi()
-    adapterName.value = h.adapter || ''
     tokenKind.value = h.tokenKind || ''
     hasAgentToken.value = h.hasAgentToken !== false
   } catch {
-    adapterName.value = ''
     tokenKind.value = ''
     hasAgentToken.value = true
   }

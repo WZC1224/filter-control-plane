@@ -60,6 +60,12 @@ const router = createRouter({
           component: () => import('@/views/NoticeDetailView.vue'),
         },
         {
+          path: 'users',
+          name: 'users',
+          component: () => import('@/views/UsersView.vue'),
+          meta: { roles: ['admin'] },
+        },
+        {
           path: 'account',
           name: 'account',
           component: () => import('@/views/AccountView.vue'),
@@ -68,6 +74,7 @@ const router = createRouter({
           path: 'system',
           name: 'system',
           component: () => import('@/views/SystemView.vue'),
+          meta: { roles: ['admin'] },
         },
       ],
     },
@@ -78,12 +85,24 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const user = useUserStore()
   if (!to.meta.public && !user.token) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
   if (to.name === 'login' && user.token) {
+    return { name: 'dashboard' }
+  }
+  if (user.token && !user.role) {
+    try {
+      await user.refreshMe()
+    } catch {
+      user.logout()
+      return { name: 'login', query: { redirect: to.fullPath } }
+    }
+  }
+  const roles = to.meta.roles as string[] | undefined
+  if (roles?.length && !roles.includes(user.role)) {
     return { name: 'dashboard' }
   }
   return true

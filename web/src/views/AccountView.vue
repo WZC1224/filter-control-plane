@@ -9,6 +9,11 @@
     <el-card shadow="never" class="form-card">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="用户名">{{ user.username || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="角色">
+          <el-tag size="small" :type="user.role === 'admin' ? 'danger' : 'info'" effect="plain">
+            {{ user.role || '-' }}
+          </el-tag>
+        </el-descriptions-item>
         <el-descriptions-item label="登录态">
           <el-tag size="small" :type="user.token ? 'success' : 'info'" effect="plain">
             {{ user.token ? '已登录' : '未登录' }}
@@ -38,7 +43,7 @@
           <el-button type="primary" :loading="saving" native-type="submit">保存</el-button>
         </el-form-item>
       </el-form>
-      <p class="hint">多用户 RBAC / 与 data818 账号打通仍不做；仅本机控制台密码。</p>
+      <p class="hint">角色由管理员在「用户」页分配。改密仅影响本控制台账号，不映射 data818。</p>
     </el-card>
     </div>
   </div>

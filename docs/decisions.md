@@ -9,11 +9,12 @@
 | 前端目录 | `web/` 独立工程 | 与后端解耦；`vite` 开发代理到 Flask `:5100` |
 | 后端 | Flask + SQLAlchemy + Pydantic，分层对齐 data818 | 延续栈 |
 | 本地库 | SQLite | MVP 零运维 |
-| 下游 | `Data818Adapter` / `DataCenterAdapter` HTTP（独占） | 旧系统当下游 |
+| 下游 | `Data818Adapter` HTTP | 旧系统当下游 |
 | 未配置下游 | `MockAdapter` | 本地可演示 |
 | 默认首页 | 任务列表 + 新建 | 对齐 idea.md |
-| 第二下游 | **已接**：`DOWNSTREAM=data_center` 独占切换 | 路径同构；鉴权 API Key + JWT |
+| 第二下游 | 暂缓 | 单下游先验证 |
 | 完整中台 | 不做 | 见 idea.md |
+| 控制平面角色 | **admin / operator**（Phase 2） | 独立账号；不映射 data818；见 `docs/phase2-users.md` |
 
 ## 前端栈明细
 
@@ -53,14 +54,17 @@
 | `GET /tasks/<taskNo>/export-remaining` | `POST /business/taskRecord/exportRemainingPhone`（文件流或 `objectPath`） |
 | `GET /meta/third-balances` | `GET /admin/third_management/get_third_balance` |
 | `POST /auth/change-password` | 控制平面本地用户（不下发下游） |
+| `GET/POST /users` · `PATCH /users/<id>` | 控制平面用户管理（仅 admin） |
 
-配置：`DOWNSTREAM=auto|mock|data818|data_center`。
-
-- data818：`DATA818_BASE_URL` + `DATA818_TOKEN` + `DATA818_AGENT_TOKEN`
-- data-center：`DATA_CENTER_BASE_URL` + `DATA_CENTER_API_KEY`（`/api/filter*`）+ `DATA_CENTER_TOKEN`（业务面）
-
-data-center **无**公告 `/sys_msg/*`：适配器返回空列表 / 404。
+配置：`DATA818_BASE_URL` + `DATA818_TOKEN`。
 
 ## 薄平面增量（2026-07-30）
 
-只读价目、订单类型枚举、公告详情、剩余号导出。不做：源文件下载、充值、商品写、第二下游、完整 RBAC。
+只读价目、订单类型枚举、公告详情、剩余号导出。不做：源文件下载、充值、商品写、第二下游、完整菜单级 RBAC、与 data818 账号打通。
+
+## 角色（Phase 2）
+
+| 角色 | 能力 |
+|------|------|
+| `admin` | 用户管理；关单/退款/重试；系统页；其余全部 |
+| `operator` | 主路径（任务/订单/价目/公告/账号）；无用户管理与敏感运维 |

@@ -13,6 +13,18 @@ class ChangePasswordSchema(BaseModel):
     newPassword: str = Field(..., min_length=6, max_length=128)
 
 
+class CreateUserSchema(BaseModel):
+    username: str = Field(..., min_length=1, max_length=64)
+    password: str = Field(..., min_length=6, max_length=128)
+    role: str = Field('operator', pattern='^(admin|operator)$')
+
+
+class PatchUserSchema(BaseModel):
+    role: Optional[str] = Field(None, pattern='^(admin|operator)$')
+    isActive: Optional[bool] = None
+    password: Optional[str] = Field(None, min_length=6, max_length=128)
+
+
 class TaskListSchema(BaseModel):
     pageNo: int = Field(1, ge=1)
     pageSize: int = Field(20, ge=1, le=100)

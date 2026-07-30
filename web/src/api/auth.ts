@@ -1,5 +1,5 @@
 import { request } from './http'
-import type { LoginResult } from '@/types/api'
+import type { LoginResult, UserRole } from '@/types/api'
 
 export function loginApi(username: string, password: string) {
   return request<LoginResult>({
@@ -10,7 +10,7 @@ export function loginApi(username: string, password: string) {
 }
 
 export function meApi() {
-  return request<{ username: string }>({
+  return request<{ username: string; role: UserRole; isActive: boolean }>({
     url: '/auth/me',
     method: 'get',
   })

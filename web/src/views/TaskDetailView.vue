@@ -85,11 +85,11 @@
       </template>
     </el-card>
 
-    <el-card shadow="never">
+    <el-card v-if="user.isAdmin" shadow="never">
       <template #header>
         <h2 class="section-title">运维操作</h2>
       </template>
-      <p class="ops-hint">对齐 data818：关单（排队未上传）、退款（完成/关闭）、重试（超管）。真实下游需 TOKEN 具备 admin/super 权限。</p>
+      <p class="ops-hint">对齐 data818：关单（排队未上传）、退款（完成/关闭）、重试（超管）。真实下游需 TOKEN 具备 admin/super 权限。控制平面仅 admin 可见。</p>
       <div class="ops-row">
         <el-button :disabled="summary?.status !== 0" :loading="opsLoading === 'close'" @click="onClose">
           关闭任务
@@ -144,7 +144,9 @@ import {
   type DownloadFormat,
 } from '@/utils/taskDisplay'
 import type { TaskItem } from '@/types/api'
+import { useUserStore } from '@/stores/user'
 
+const user = useUserStore()
 const route = useRoute()
 const loading = ref(false)
 const downloading = ref(false)
