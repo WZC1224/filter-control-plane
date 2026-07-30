@@ -70,7 +70,7 @@ npm run preview
 filter-control-plane/
 ├── docs/
 │   ├── idea.md              # 已确认意图
-│   ├── decisions.md         # 技术决策
+│   ├── decisions.md         # 技术决策（总表 + D-001… 记录；本仓不另开 ADR 目录）
 │   └── spec.md              # 本规格（真源）
 ├── app/
 │   ├── api/                 # 路由：薄控制器

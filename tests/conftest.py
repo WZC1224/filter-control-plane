@@ -18,13 +18,19 @@ def app(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, 'DATA_CENTER_TOKEN', '')
     monkeypatch.setattr(settings, 'ADMIN_USERNAME', 'admin')
     monkeypatch.setattr(settings, 'ADMIN_PASSWORD', 'admin123')
+    # 默认关登录限流，避免用例互相撞 429；专门测限流的用例自行打开
+    monkeypatch.setattr(settings, 'LOGIN_RATE_LIMIT_MAX', 0)
+    monkeypatch.setattr(settings, 'TRUST_PROXY_HEADERS', False)
     get_adapter.cache_clear()
 
     from app import create_app
+    from app.exts.login_rate_limit import login_limiter
 
+    login_limiter.reset()
     application = create_app()
     application.config['TESTING'] = True
     yield application
+    login_limiter.reset()
     get_adapter.cache_clear()
 
 

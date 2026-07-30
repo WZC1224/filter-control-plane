@@ -44,6 +44,10 @@ def create_app() -> Flask:
         resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
         resp.headers.setdefault('X-Frame-Options', 'DENY')
         resp.headers.setdefault('Referrer-Policy', 'same-origin')
+        resp.headers.setdefault(
+            'Permissions-Policy',
+            'camera=(), microphone=(), geolocation=()',
+        )
         return resp
 
     @app.errorhandler(_Exception)

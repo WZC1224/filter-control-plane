@@ -64,6 +64,17 @@ class BaseConfig:
     # 逗号分隔；空 = 开发放行 / 生产同机托管不需跨域
     CORS_ORIGINS = (os.getenv('CORS_ORIGINS') or '').strip()
 
+    # 登录限流：同 IP 窗口内最大尝试次数；0 = 关闭（测试常用）
+    LOGIN_RATE_LIMIT_MAX = int(os.getenv('LOGIN_RATE_LIMIT_MAX', '20'))
+    LOGIN_RATE_WINDOW_SECONDS = float(os.getenv('LOGIN_RATE_WINDOW_SECONDS', '300'))
+    # 仅反向代理已剥伪造头时再开；否则勿信 X-Forwarded-For
+    TRUST_PROXY_HEADERS = (os.getenv('TRUST_PROXY_HEADERS') or '').strip().lower() in (
+        '1',
+        'true',
+        'yes',
+        'on',
+    )
+
     # 独占下游：mock | data818 | data_center | auto（空=auto）
     DOWNSTREAM = (os.getenv('DOWNSTREAM', '') or 'auto').strip().lower()
 

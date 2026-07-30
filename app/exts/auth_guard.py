@@ -26,10 +26,12 @@ def login_required(fn):
 
 
 def admin_required(fn):
-    @wraps(fn)
+    """先 login_required，再校验 admin。"""
+
     @login_required
+    @wraps(fn)
     def wrapper(*args, **kwargs):
-        if getattr(g.user, 'role', None) != ROLE_ADMIN:
+        if g.user.role != ROLE_ADMIN:
             return Fail(code=403, message='需要管理员权限')
         return fn(*args, **kwargs)
 

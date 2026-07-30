@@ -46,9 +46,11 @@ python main.py
 | `DOWNSTREAM` | `data818` 或 `data_center`（勿生产裸 `mock` 对真实用户） |
 | 下游凭证 | data818 双 Token / data_center 三件套 |
 
-可选：`HOST` `PORT` `CORS_ORIGINS` `APP_VERSION`。
+可选：`HOST` `PORT` `CORS_ORIGINS` `APP_VERSION` · `LOGIN_RATE_LIMIT_MAX`（默认 20）· `LOGIN_RATE_WINDOW_SECONDS`（默认 300）· `TRUST_PROXY_HEADERS`（默认关；仅反向代理已剥伪造 `X-Forwarded-For` 时开）。
 
 弱密钥 / 弱管理员密码 → **进程直接拒绝启动**。
+
+启动时 `ensure_admin`：若 `ADMIN_USERNAME` 已存在但非 admin，会**强制升为 admin**（不改密码）。勿用该用户名给普通运营账号。
 
 ## 前置检查清单
 
@@ -76,8 +78,11 @@ python main.py
 - 开发：`FLASK_ENV=development` → Flask debug（**勿对公网**）
 - 生产：waitress · 无自动重载
 - SPA 路由：未知前端路径回 `index.html`；`/auth` `/tasks` 等 API 前缀不吞
-- 安全头：`X-Content-Type-Options` `X-Frame-Options` `Referrer-Policy`
+- 安全头：`X-Content-Type-Options` `X-Frame-Options` `Referrer-Policy` `Permissions-Policy`
+- 登录限流：同 IP 滑动窗口（进程内；多 worker 各自计数）
 - 试用通过后再扩大账号（[`pilot.md`](pilot.md)）
+- 已知残留：前端 JWT 在 `localStorage`（XSS 可偷）；改 httpOnly cookie 需另开认证改造
+- 已知残留：Element Plus SPA 未上严格 CSP（`unsafe-inline` 成本高）
 
 ## 明确不做（本手册）
 
