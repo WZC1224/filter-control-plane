@@ -161,11 +161,13 @@ Notice 形：`{ id, title, contentMd, bizType, level, publishStatus, createDate,
   "adapter": "mock"|"data818",
   "mock": true,
   "tokenKind": "none"|"agent"|"login"|"unknown",
+  "hasAgentToken": true,
   "time": "2026-07-30T06:00:00Z"
 }
 ```
 
-`version` 来自 `config.APP_VERSION`；`time` 为 UTC ISO8601。`tokenKind=agent` 表示下游为无过期 agent_token，业务列表/订单会 `invalid token`。
+`version` 来自 `config.APP_VERSION`；`time` 为 UTC ISO8601。  
+`tokenKind` 看主 `DATA818_TOKEN`；`hasAgentToken` 看是否配置 `DATA818_AGENT_TOKEN`。818 两套 JWT 密钥：登录口与 `/api/filter/*`（agent）不同。
 
 ### `GET /meta/filter-types` · `GET /meta/countries`
 

@@ -19,6 +19,7 @@ def health():
             'adapter': 'mock' if settings.use_mock_adapter else 'data818',
             'mock': settings.use_mock_adapter,
             'tokenKind': settings.data818_token_kind,
+            'hasAgentToken': settings.data818_has_agent_token,
             'time': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
         }
     )

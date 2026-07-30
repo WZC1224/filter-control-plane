@@ -56,14 +56,21 @@
           >
             {{ health?.tokenKind || '—' }}
           </el-tag>
-          <span v-if="health?.tokenKind === 'agent'" class="hint"> 仅 /api/filter/*</span>
+          <el-tag
+            size="small"
+            class="ml"
+            effect="plain"
+            :type="health?.hasAgentToken ? 'success' : 'warning'"
+          >
+            agent {{ health?.hasAgentToken ? '已配' : '未配' }}
+          </el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="下游余额">{{ balanceText }}</el-descriptions-item>
         <el-descriptions-item label="前端">
           <span class="mono">web@{{ webVersion }}</span>
         </el-descriptions-item>
         <el-descriptions-item label="说明">
-          agent_token 不能打任务列表/订单。三方余额与关单需 admin ACL。充值/商品不在本台。
+          登录 JWT + agent_token 双密钥。三方余额与关单需 admin ACL。
         </el-descriptions-item>
       </el-descriptions>
     </el-card>

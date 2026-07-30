@@ -11,12 +11,14 @@
 
 ### Token 种类
 
-| 种类 | 特征 | 能打通 |
-|------|------|--------|
-| **agent_token**（超管签发、常 `exp:null`） | 仅挂在开放筛选 `is_token_expire=false` 路径 | `/api/filter/*`：余额、类型、国家、建任务、查询、下载 |
-| **登录 JWT**（`/auth/login`，带真实 `exp`） | 业务路径 `is_token_expire=true` | 另需角色 ApiPath：任务列表、订单、价目、公告、账单、统计、三方余额、关单退款 |
+818 使用**两套 JWT 密钥**（`JWT_SECRET_EXPIRE` / `JWT_SECRET_NO_EXPIRE`），控制平面需双 Token：
 
-当前若列表/订单返回 `invalid token`，多半是 agent_token 打了业务接口 — 换登录 JWT，或接受控制台「只走开放筛选主路径」。
+| env | 来源 | 用途 |
+|-----|------|------|
+| `DATA818_TOKEN` | 浏览器登录后的 `Authorization`（带 `exp`） | 任务列表、订单、价目、公告、账单、统计 |
+| `DATA818_AGENT_TOKEN` | 超管签发 agent_token（常 `exp:null`） | `/api/filter/*`：余额、类型、国家、建任务、查询、下载 |
+
+只配一个 → 另一半接口 `invalid token`。
 
 ## 所需下游权限（ApiPath + 角色）
 

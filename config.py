@@ -25,6 +25,16 @@ def _jwt_payload_unverified(token: str) -> dict:
         return {}
 
 
+def _token_kind(token: str) -> str:
+    payload = _jwt_payload_unverified(token)
+    if not payload:
+        return 'unknown'
+    exp = payload.get('exp')
+    if exp is None or exp == '':
+        return 'agent'
+    return 'login'
+
+
 class BaseConfig:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret')
     SQLALCHEMY_DATABASE_URI = os.getenv(
@@ -40,7 +50,10 @@ class BaseConfig:
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
     DATA818_BASE_URL = os.getenv('DATA818_BASE_URL', '').rstrip('/')
+    # 登录 JWT（JWT_SECRET_EXPIRE）：任务列表/订单/价目/公告/账单
     DATA818_TOKEN = os.getenv('DATA818_TOKEN', '')
+    # agent JWT（JWT_SECRET_NO_EXPIRE）：/api/filter/* 建任务/类型/国家/余额/下载
+    DATA818_AGENT_TOKEN = os.getenv('DATA818_AGENT_TOKEN', '')
     DATA818_TIMEOUT = float(os.getenv('DATA818_TIMEOUT', '60'))
 
     APP_VERSION = os.getenv('APP_VERSION', '0.1.0')
@@ -51,16 +64,14 @@ class BaseConfig:
 
     @property
     def data818_token_kind(self) -> str:
-        """none | agent | login — agent 常 exp 为 null，只能打 /api/filter/*。"""
+        """主 Token（DATA818_TOKEN）种类：none | agent | login | unknown。"""
         if self.use_mock_adapter:
             return 'none'
-        payload = _jwt_payload_unverified(self.DATA818_TOKEN)
-        if not payload:
-            return 'unknown'
-        exp = payload.get('exp')
-        if exp is None or exp == '':
-            return 'agent'
-        return 'login'
+        return _token_kind(self.DATA818_TOKEN)
+
+    @property
+    def data818_has_agent_token(self) -> bool:
+        return bool(self.DATA818_AGENT_TOKEN.strip())
 
 
 settings = BaseConfig()

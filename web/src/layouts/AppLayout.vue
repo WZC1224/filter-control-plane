@@ -83,13 +83,13 @@
       </el-header>
       <el-main class="app-main">
         <el-alert
-          v-if="tokenKind === 'agent'"
+          v-if="tokenBanner"
           class="token-banner"
           type="warning"
           show-icon
           :closable="false"
-          title="下游为 agent_token"
-          description="余额/类型/建任务/查询/下载可用。任务列表、订单、价目、公告、账单需把 .env 的 DATA818_TOKEN 换成带过期时间的登录 JWT。"
+          :title="tokenBanner.title"
+          :description="tokenBanner.desc"
         />
         <router-view />
       </el-main>
@@ -116,6 +116,7 @@ const collapsed = ref(false)
 const mobile = ref(false)
 const balanceRaw = ref<number | string | null>(null)
 const tokenKind = ref('')
+const hasAgentToken = ref(true)
 let timer: ReturnType<typeof setInterval> | undefined
 let mq: MediaQueryList | undefined
 
@@ -159,6 +160,28 @@ const balanceText = computed(() => {
   return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(balanceRaw.value)
 })
 
+const tokenBanner = computed(() => {
+  if (tokenKind.value === 'agent' && !hasAgentToken.value) {
+    return {
+      title: '下游仅 agent_token',
+      desc: '开放筛选可用。任务列表/订单等需再配 DATA818_TOKEN=登录 JWT。',
+    }
+  }
+  if (tokenKind.value === 'login' && !hasAgentToken.value) {
+    return {
+      title: '缺少 DATA818_AGENT_TOKEN',
+      desc: '列表/订单可用。建任务、类型、国家、余额、下载需超管签发的 agent_token（818 另一套密钥）。',
+    }
+  }
+  if (tokenKind.value === 'agent' && hasAgentToken.value) {
+    return {
+      title: '主 Token 仍是 agent',
+      desc: '建议 DATA818_TOKEN=登录 JWT，DATA818_AGENT_TOKEN=agent，两边齐全。',
+    }
+  }
+  return null
+})
+
 async function loadBalance() {
   try {
     const r = await balanceApi()
@@ -172,8 +195,10 @@ async function loadHealth() {
   try {
     const h = await healthApi()
     tokenKind.value = h.tokenKind || ''
+    hasAgentToken.value = h.hasAgentToken !== false
   } catch {
     tokenKind.value = ''
+    hasAgentToken.value = true
   }
 }
 

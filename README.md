@@ -18,7 +18,7 @@
 | 前端 `web/` | Vue 3 · Vite · TypeScript · Element Plus · Pinia · Vue Router · Axios |
 | 后端 | Flask · SQLAlchemy · Pydantic · httpx |
 
-账号模型：**控制平面独立账号**（默认 `admin` / `admin123`）。下游用 `DATA818_TOKEN`，不映射 data818 用户。
+账号模型：**控制平面独立账号**（默认 `admin` / `admin123`）。下游需双 Token：`DATA818_TOKEN`（登录 JWT）+ `DATA818_AGENT_TOKEN`（agent），见 [`docs/data818-integration.md`](docs/data818-integration.md)。
 
 下载：**控制平面代理文件流**（`Content-Disposition` 附件）；前端 blob 保存。Query `format=csv|txt|xlsx|invalid`（默认 `csv`）。
 

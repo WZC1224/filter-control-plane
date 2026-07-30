@@ -98,6 +98,7 @@ def test_meta_health(client):
     assert data['result']['version']
     assert 'mock' in data['result']
     assert data['result']['tokenKind'] in ('none', 'agent', 'login', 'unknown')
+    assert 'hasAgentToken' in data['result']
     assert data['result']['time']
 
 

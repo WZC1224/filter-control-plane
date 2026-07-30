@@ -25,10 +25,21 @@ class Data818Adapter(DownstreamAdapter):
             raise RuntimeError('DATA818_BASE_URL / DATA818_TOKEN required')
         self.base = settings.DATA818_BASE_URL
         self.timeout = settings.DATA818_TIMEOUT
-        token = settings.DATA818_TOKEN
-        if not token.lower().startswith('bearer '):
-            token = f'Bearer {token}'
-        self.headers = {'Authorization': token}
+        self._login_auth = self._bearer(settings.DATA818_TOKEN)
+        agent = (settings.DATA818_AGENT_TOKEN or '').strip()
+        self._agent_auth = self._bearer(agent) if agent else self._login_auth
+
+    @staticmethod
+    def _bearer(token: str) -> str:
+        t = token.strip()
+        if not t.lower().startswith('bearer '):
+            return f'Bearer {t}'
+        return t
+
+    def _headers_for(self, path: str) -> dict[str, str]:
+        """818 两套密钥：/api/filter/* 用 agent；其余用登录 JWT。"""
+        auth = self._agent_auth if path.startswith('/api/filter') else self._login_auth
+        return {'Authorization': auth}
 
     def _unwrap(self, payload: dict[str, Any], *, context: str) -> Any:
         if not isinstance(payload, dict):
@@ -54,7 +65,7 @@ class Data818Adapter(DownstreamAdapter):
     def _get(self, path: str, params: dict | None = None) -> Any:
         try:
             with httpx.Client(timeout=self.timeout) as client:
-                resp = client.get(f'{self.base}{path}', headers=self.headers, params=params or {})
+                resp = client.get(f'{self.base}{path}', headers=self._headers_for(path), params=params or {})
                 resp.raise_for_status()
                 return self._response_json(resp, context=path)
         except _Exception:
@@ -65,7 +76,7 @@ class Data818Adapter(DownstreamAdapter):
     def _post_json(self, path: str, body: dict) -> Any:
         try:
             with httpx.Client(timeout=self.timeout) as client:
-                resp = client.post(f'{self.base}{path}', headers=self.headers, json=body)
+                resp = client.post(f'{self.base}{path}', headers=self._headers_for(path), json=body)
                 resp.raise_for_status()
                 return self._response_json(resp, context=path)
         except _Exception:
@@ -78,7 +89,7 @@ class Data818Adapter(DownstreamAdapter):
             with httpx.Client(timeout=self.timeout) as client:
                 resp = client.post(
                     f'{self.base}{path}',
-                    headers=self.headers,
+                    headers=self._headers_for(path),
                     data=data,
                     files=files,
                 )
@@ -167,7 +178,7 @@ class Data818Adapter(DownstreamAdapter):
             with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
                 resp = client.get(
                     f'{self.base}{path}',
-                    headers=self.headers,
+                    headers=self._headers_for(path),
                     params={'taskNo': task_no},
                 )
                 resp.raise_for_status()
@@ -416,7 +427,7 @@ class Data818Adapter(DownstreamAdapter):
             }
         try:
             with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
-                resp = client.get(url, headers=self.headers)
+                resp = client.get(url)
                 resp.raise_for_status()
                 filename = self._filename_from_disposition(
                     resp.headers.get('content-disposition'),
