@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from app.exts.auth_guard import login_required
+from app.exts.auth_guard import admin_required, login_required
 from app.service.task import TaskService
 from app.utils.response import Success
 from config import settings
@@ -53,7 +53,7 @@ def statistics():
 
 
 @bp.route('/third-balances', methods=['GET'])
-@login_required
+@admin_required
 def third_balances():
     return Success(result=TaskService.third_balances())
 

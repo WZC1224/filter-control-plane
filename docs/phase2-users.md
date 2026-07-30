@@ -23,7 +23,8 @@
 - [x] 种子 `ADMIN_*` 用户为 `admin`；停用账号无法登录
 - [x] `GET/POST /users`、`PATCH /users/<id>` 仅 admin；不能停用/降级最后一个 admin
 - [x] `POST /tasks/<id>/close|refund|retry` 仅 admin
-- [x] 登录与 `/auth/me` 返回 `role`；前端按角色藏菜单与按钮
+- [x] 登录与 `/auth/me` 返回 `role`；前端按角色藏菜单与按钮（每次导航强制 `/auth/me` 刷新 role）
+- [x] `GET /meta/third-balances` 仅 admin（与系统页一致）
 - [x] `pytest -q` 绿；`npm run build` 绿
 
 ## API

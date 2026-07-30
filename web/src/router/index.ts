@@ -93,7 +93,8 @@ router.beforeEach(async (to) => {
   if (to.name === 'login' && user.token) {
     return { name: 'dashboard' }
   }
-  if (user.token && !user.role) {
+  // 每次有 token 都拉 /auth/me，避免降级/停用后本地 role 撒谎
+  if (user.token && !to.meta.public) {
     try {
       await user.refreshMe()
     } catch {

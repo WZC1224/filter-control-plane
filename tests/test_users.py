@@ -89,3 +89,22 @@ def test_operator_cannot_close_task(client, auth_headers):
     resp = client.post('/tasks/MOCK-1004/close', headers=op_headers).get_json()
     assert resp['success'] is False
     assert resp['code'] == 403
+
+
+def test_operator_cannot_third_balances(client, auth_headers):
+    client.post(
+        '/users',
+        json={'username': 'op5', 'password': 'op123456', 'role': 'operator'},
+        headers=auth_headers,
+    )
+    login = client.post('/auth/login', json={'username': 'op5', 'password': 'op123456'}).get_json()
+    op_headers = {'Authorization': f"Bearer {login['result']['token']}"}
+    resp = client.get('/meta/third-balances', headers=op_headers).get_json()
+    assert resp['success'] is False
+    assert resp['code'] == 403
+
+
+def test_admin_can_third_balances(client, auth_headers):
+    resp = client.get('/meta/third-balances', headers=auth_headers).get_json()
+    assert resp['success'] is True
+    assert isinstance(resp['result'], list)
