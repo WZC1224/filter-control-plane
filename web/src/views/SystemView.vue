@@ -79,7 +79,10 @@
       <template #header>
         <h2 class="section-title">三方渠道余额</h2>
       </template>
-      <el-empty v-if="!loading && !thirds.length" description="无数据或无权限" />
+      <el-empty
+        v-if="!loading && !thirds.length"
+        description="暂无数据（下游三方接口失败或无权限时也会显示为空）"
+      />
       <el-table v-else :data="thirds" stripe>
         <el-table-column label="渠道" min-width="160">
           <template #default="{ row }">{{ row.thirdSourceName || '-' }}</template>

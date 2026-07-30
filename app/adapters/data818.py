@@ -320,7 +320,11 @@ class Data818Adapter(DownstreamAdapter):
         }
 
     def third_balances(self) -> list[dict[str, Any]]:
-        result = self._get('/admin/third_management/get_third_balance')
+        """818 侧常因三方 TNTPUB 500；本平面不改下游，失败软降级为空列表。"""
+        try:
+            result = self._get('/admin/third_management/get_third_balance')
+        except _Exception:
+            return []
         rows = result if isinstance(result, list) else []
         out: list[dict[str, Any]] = []
         for row in rows:

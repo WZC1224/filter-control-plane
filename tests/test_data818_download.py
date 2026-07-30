@@ -103,6 +103,30 @@ def test_get_download_json_business_error(data818_settings, monkeypatch):
     assert ei.value.code == 201
 
 
+def test_third_balances_soft_fail_on_downstream_500(data818_settings, monkeypatch):
+    from app.adapters import data818 as data818_mod
+    from app.adapters.data818 import Data818Adapter
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text='INTERNAL SERVER ERROR')
+
+    transport = httpx.MockTransport(handler)
+    real = httpx.Client(transport=transport)
+
+    class _Client:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return real
+
+        def __exit__(self, *args):
+            return False
+
+    monkeypatch.setattr(data818_mod.httpx, 'Client', _Client)
+    assert Data818Adapter().third_balances() == []
+
+
 def test_get_rejects_html_body(data818_settings, monkeypatch):
     from app.adapters import data818 as data818_mod
     from app.adapters.data818 import Data818Adapter

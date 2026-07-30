@@ -39,7 +39,7 @@ Token 对应用户需能访问：
 | 公告 | `GET /sys_msg/list`、`GET /sys_msg/detail` |
 | 价目 | `GET /product/list` |
 | 剩余号 | `POST /business/taskRecord/exportRemainingPhone`（常返 OSS `object_path`，控制台可复制） |
-| 三方余额 | `GET /admin/third_management/get_third_balance` |
+| 三方余额 | `GET /admin/third_management/get_third_balance`（818 若 500，控制平面**软降级空列表**，不改 818） |
 
 ## 冒烟步骤
 
