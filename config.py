@@ -6,6 +6,14 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / '.env')
 
+_WEAK_SECRETS = frozenset({
+    '',
+    'dev-secret',
+    'dev-jwt',
+    'change-me-filter-control-plane',
+    'change-me-jwt-secret',
+})
+
 
 def _jwt_payload_unverified(token: str) -> dict:
     """只读 JWT payload，不验签（仅用于运维提示）。"""
@@ -36,6 +44,10 @@ def _token_kind(token: str) -> str:
 
 
 class BaseConfig:
+    FLASK_ENV = (os.getenv('FLASK_ENV') or 'development').strip().lower()
+    HOST = os.getenv('HOST', '0.0.0.0')
+    PORT = int(os.getenv('PORT', '5100'))
+
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret')
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL', f"sqlite:///{BASE_DIR / 'fcp.db'}"
@@ -48,6 +60,9 @@ class BaseConfig:
 
     ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
     ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
+
+    # 逗号分隔；空 = 开发放行 / 生产同机托管不需跨域
+    CORS_ORIGINS = (os.getenv('CORS_ORIGINS') or '').strip()
 
     # 独占下游：mock | data818 | data_center | auto（空=auto）
     DOWNSTREAM = (os.getenv('DOWNSTREAM', '') or 'auto').strip().lower()
@@ -65,6 +80,23 @@ class BaseConfig:
     DATA_CENTER_TIMEOUT = float(os.getenv('DATA_CENTER_TIMEOUT', '60'))
 
     APP_VERSION = os.getenv('APP_VERSION', '0.1.0')
+
+    @property
+    def is_production(self) -> bool:
+        return self.FLASK_ENV in ('production', 'prod')
+
+    def assert_production_safe(self) -> None:
+        """生产启动门禁：弱密钥直接拒绝。"""
+        if not self.is_production:
+            return
+        if self.SECRET_KEY in _WEAK_SECRETS or self.JWT_SECRET in _WEAK_SECRETS:
+            raise RuntimeError(
+                '生产环境禁止使用默认 SECRET_KEY / JWT_SECRET；请在 .env 设置强随机值'
+            )
+        if self.ADMIN_PASSWORD in ('admin123', 'admin', 'password', '123456'):
+            raise RuntimeError(
+                '生产环境禁止弱 ADMIN_PASSWORD；请改成强密码后再启动'
+            )
 
     @property
     def data818_configured(self) -> bool:

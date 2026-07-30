@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flask import Flask, send_from_directory
+from flask import Flask, abort, send_from_directory
 from flask_cors import CORS
 from pydantic import ValidationError
 
@@ -10,17 +10,41 @@ from app.api import bp_list
 from app.utils.response import Fail, Success, _Exception
 
 WEB_DIST = Path(__file__).resolve().parent.parent / 'web' / 'dist'
+_SPA_API_ROOTS = frozenset({
+    'auth',
+    'tasks',
+    'meta',
+    'orders',
+    'bills',
+    'notices',
+    'users',
+})
 
 
 def create_app() -> Flask:
+    settings.assert_production_safe()
+
     app = Flask(__name__)
     app.config.from_object(settings)
-    CORS(app, supports_credentials=True)
+
+    origins = [o.strip() for o in settings.CORS_ORIGINS.split(',') if o.strip()]
+    if origins:
+        CORS(app, origins=origins, supports_credentials=True)
+    elif not settings.is_production:
+        # 开发：Vite :5173 直连 :5100 时需要
+        CORS(app, supports_credentials=True)
 
     db.init_app(app)
 
     for bp in bp_list:
         app.register_blueprint(bp)
+
+    @app.after_request
+    def security_headers(resp):
+        resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        resp.headers.setdefault('X-Frame-Options', 'DENY')
+        resp.headers.setdefault('Referrer-Policy', 'same-origin')
+        return resp
 
     @app.errorhandler(_Exception)
     def handle_biz(err: _Exception):
@@ -33,24 +57,22 @@ def create_app() -> Flask:
 
     if WEB_DIST.exists():
         @app.route('/')
-        @app.route('/login')
-        @app.route('/users')
-        @app.route('/system')
-        @app.route('/tasks')
-        @app.route('/tasks/create')
-        @app.route('/tasks/<path:_>')
-        @app.route('/orders')
-        @app.route('/products')
-        @app.route('/bills')
-        @app.route('/notices')
-        @app.route('/notices/<path:_>')
-        @app.route('/account')
-        def spa_index(_=None):
+        def spa_root():
             return send_from_directory(WEB_DIST, 'index.html')
 
         @app.route('/assets/<path:filename>')
         def spa_assets(filename: str):
             return send_from_directory(WEB_DIST / 'assets', filename)
+
+        @app.route('/<path:path>')
+        def spa_fallback(path: str):
+            root = path.split('/', 1)[0]
+            if root in _SPA_API_ROOTS:
+                abort(404)
+            candidate = WEB_DIST / path
+            if candidate.is_file():
+                return send_from_directory(WEB_DIST, path)
+            return send_from_directory(WEB_DIST, 'index.html')
     else:
         @app.route('/')
         def index_hint():

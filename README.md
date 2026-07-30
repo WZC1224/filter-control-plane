@@ -10,6 +10,7 @@
 - 计划：[`tasks/plan.md`](tasks/plan.md)
 - 联调：[`docs/data818-integration.md`](docs/data818-integration.md)
 - 试用：[`docs/pilot.md`](docs/pilot.md)
+- 部署：[`docs/deploy.md`](docs/deploy.md)
 - API 合同：[`docs/api-contract.md`](docs/api-contract.md)
 
 ## 技术栈
@@ -53,13 +54,17 @@ pytest -q
 cd web && npm run build
 ```
 
-## 生产构建
+## 生产构建与启动
+
+见完整手册 [`docs/deploy.md`](docs/deploy.md)。摘要：
 
 ```bash
-cd web && npm run build
-python main.py   # 托管 web/dist，端口 5100
+cd web && npm run build && cd ..
+# .env 设 FLASK_ENV=production + 强 SECRET_KEY / JWT_SECRET / ADMIN_PASSWORD
+python main.py   # waitress 托管 API + web/dist，默认 :5100
 ```
 
+探活：`GET /meta/health`。
 ## 控制台能力（薄平面）
 
 - 登录 / 改密（本地账号）· 明暗主题 · 侧栏折叠记忆
@@ -86,4 +91,5 @@ python main.py   # 托管 web/dist，端口 5100
 
 ## 明确不做
 
-充值 · 商品写 · 完整 RBAC · 第二下游 · 重写筛号引擎（见 `docs/spec.md` Boundaries）。
+充值 · 商品写 · 完整菜单级 RBAC · 重写筛号引擎（见 `docs/spec.md` Boundaries）。
+`data_center` 为可选独占下游，非并行双源。
