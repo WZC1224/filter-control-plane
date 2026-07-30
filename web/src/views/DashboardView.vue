@@ -98,11 +98,12 @@
         </div>
       </template>
       <el-empty v-if="!loading && !recent.length" description="暂无任务" />
+      <div v-else class="table-scroll">
       <el-table
-        v-else
         :data="recent"
         stripe
         class="click-table"
+        max-height="calc(100dvh - 18rem)"
         @row-click="onRecentClick"
       >
         <el-table-column label="任务号" min-width="140">
@@ -127,6 +128,7 @@
           <template #default="{ row }">{{ row.progress ?? '-' }}%</template>
         </el-table-column>
       </el-table>
+      </div>
     </el-card>
   </div>
 </template>

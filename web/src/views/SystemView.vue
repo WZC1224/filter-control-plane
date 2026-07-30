@@ -83,7 +83,8 @@
         v-if="!loading && !thirds.length"
         description="暂无数据（下游三方接口失败或无权限时也会显示为空）"
       />
-      <el-table v-else :data="thirds" stripe>
+      <div v-else class="table-scroll">
+      <el-table :data="thirds" stripe max-height="calc(100dvh - 22rem)">
         <el-table-column label="渠道" min-width="160">
           <template #default="{ row }">{{ row.thirdSourceName || '-' }}</template>
         </el-table-column>
@@ -91,6 +92,7 @@
           <template #default="{ row }">{{ row.balance ?? '-' }}</template>
         </el-table-column>
       </el-table>
+      </div>
     </el-card>
   </div>
 </template>

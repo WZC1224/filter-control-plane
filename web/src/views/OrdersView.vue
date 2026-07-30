@@ -50,11 +50,13 @@
     </el-alert>
 
     <el-card shadow="never">
+      <div class="table-scroll">
       <el-table
         v-loading="loading"
         :data="orders"
         stripe
         class="click-table"
+        max-height="calc(100dvh - 15rem)"
         @row-click="onRowClick"
       >
         <el-table-column label="订单号" min-width="140">
@@ -92,6 +94,7 @@
         <el-table-column label="时间" min-width="160" prop="createTime" />
         <el-table-column label="说明" min-width="140" show-overflow-tooltip prop="description" />
       </el-table>
+      </div>
       <div class="pager">
         <el-pagination
           v-model:current-page="pageNo"

@@ -51,7 +51,8 @@
           <span v-if="!loading" class="list-meta">显示 {{ filtered.length }} / {{ rows.length }}</span>
         </div>
       </template>
-      <el-table v-loading="loading" :data="filtered" stripe>
+      <div class="table-scroll">
+      <el-table v-loading="loading" :data="filtered" stripe max-height="calc(100dvh - 15rem)">
         <el-table-column label="应用" width="120" prop="applicationType" />
         <el-table-column label="业务" width="120" prop="businessType" />
         <el-table-column label="类型" width="140">
@@ -69,6 +70,7 @@
         <el-table-column label="渠道" width="110" prop="thirdSource" />
         <el-table-column label="说明" min-width="160" show-overflow-tooltip prop="description" />
       </el-table>
+      </div>
     </el-card>
   </div>
 </template>

@@ -81,14 +81,16 @@
         <el-button type="primary" @click="$router.push({ name: 'task-create' })">新建任务</el-button>
       </el-empty>
       <template v-else>
-        <el-table
-          v-loading="loading"
-          :data="tasks"
-          stripe
-          class="task-table"
-          aria-label="筛选任务表"
-          @row-click="onRowClick"
-        >
+        <div class="table-scroll">
+          <el-table
+            v-loading="loading"
+            :data="tasks"
+            stripe
+            class="task-table"
+            aria-label="筛选任务表"
+            max-height="calc(100dvh - 15rem)"
+            @row-click="onRowClick"
+          >
           <el-table-column label="任务号" min-width="140">
             <template #default="{ row }">
               <button
@@ -183,6 +185,7 @@
             </template>
           </el-table-column>
         </el-table>
+        </div>
         <div class="pager">
           <el-pagination
             v-model:current-page="pageNo"

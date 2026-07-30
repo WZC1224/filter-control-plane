@@ -125,13 +125,30 @@ body,
   font-size: 0.8125rem;
 }
 
-/* 表格卡片：宽表在面板内横滚，不撑破主布局 */
+/* 表格：限制在面板/视口内，横向与表体纵向可滚，不撑破主布局 */
+.page-panel .el-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .page-panel .el-card__body {
   min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.page-panel .table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .page-panel .el-table {
   width: 100%;
+  max-width: 100%;
 }
 
 @media (max-width: 768px) {
