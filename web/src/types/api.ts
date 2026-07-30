@@ -52,6 +52,8 @@ export interface HealthResult {
   adapter: string
   version?: string
   mock?: boolean
+  /** none | agent | login | unknown */
+  tokenKind?: string
   time?: string
 }
 

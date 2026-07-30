@@ -7,6 +7,24 @@ BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / '.env')
 
 
+def _jwt_payload_unverified(token: str) -> dict:
+    """只读 JWT payload，不验签（仅用于运维提示）。"""
+    import base64
+    import json
+
+    raw = token.strip()
+    if raw.lower().startswith('bearer '):
+        raw = raw[7:].strip()
+    parts = raw.split('.')
+    if len(parts) < 2:
+        return {}
+    pad = parts[1] + '=' * (-len(parts[1]) % 4)
+    try:
+        return json.loads(base64.urlsafe_b64decode(pad.encode('ascii')))
+    except Exception:
+        return {}
+
+
 class BaseConfig:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret')
     SQLALCHEMY_DATABASE_URI = os.getenv(
@@ -30,6 +48,19 @@ class BaseConfig:
     @property
     def use_mock_adapter(self) -> bool:
         return not (self.DATA818_BASE_URL and self.DATA818_TOKEN)
+
+    @property
+    def data818_token_kind(self) -> str:
+        """none | agent | login — agent 常 exp 为 null，只能打 /api/filter/*。"""
+        if self.use_mock_adapter:
+            return 'none'
+        payload = _jwt_payload_unverified(self.DATA818_TOKEN)
+        if not payload:
+            return 'unknown'
+        exp = payload.get('exp')
+        if exp is None or exp == '':
+            return 'agent'
+        return 'login'
 
 
 settings = BaseConfig()

@@ -160,11 +160,12 @@ Notice 形：`{ id, title, contentMd, bizType, level, publishStatus, createDate,
   "version": "0.1.0",
   "adapter": "mock"|"data818",
   "mock": true,
+  "tokenKind": "none"|"agent"|"login"|"unknown",
   "time": "2026-07-30T06:00:00Z"
 }
 ```
 
-`version` 来自 `config.APP_VERSION`；`time` 为 UTC ISO8601。
+`version` 来自 `config.APP_VERSION`；`time` 为 UTC ISO8601。`tokenKind=agent` 表示下游为无过期 agent_token，业务列表/订单会 `invalid token`。
 
 ### `GET /meta/filter-types` · `GET /meta/countries`
 

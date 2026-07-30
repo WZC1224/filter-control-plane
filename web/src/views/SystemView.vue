@@ -48,12 +48,22 @@
         <el-descriptions-item label="服务时间(UTC)">
           <span class="mono">{{ health?.time || '-' }}</span>
         </el-descriptions-item>
+        <el-descriptions-item label="下游 Token">
+          <el-tag
+            size="small"
+            effect="plain"
+            :type="health?.tokenKind === 'login' ? 'success' : health?.tokenKind === 'agent' ? 'warning' : 'info'"
+          >
+            {{ health?.tokenKind || '—' }}
+          </el-tag>
+          <span v-if="health?.tokenKind === 'agent'" class="hint"> 仅 /api/filter/*</span>
+        </el-descriptions-item>
         <el-descriptions-item label="下游余额">{{ balanceText }}</el-descriptions-item>
         <el-descriptions-item label="前端">
           <span class="mono">web@{{ webVersion }}</span>
         </el-descriptions-item>
         <el-descriptions-item label="说明">
-          三方余额需 admin ACL。关单/退款/重试同理。充值/商品仍不在本台。
+          agent_token 不能打任务列表/订单。三方余额与关单需 admin ACL。充值/商品不在本台。
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
@@ -128,6 +138,12 @@ onMounted(load)
 
 .ml {
   margin-left: 0.5rem;
+}
+
+.hint {
+  margin-left: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--el-text-color-secondary);
 }
 
 .mb {

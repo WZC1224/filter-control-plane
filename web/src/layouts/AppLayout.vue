@@ -82,6 +82,15 @@
         <el-button text type="primary" @click="onLogout">退出</el-button>
       </el-header>
       <el-main class="app-main">
+        <el-alert
+          v-if="tokenKind === 'agent'"
+          class="token-banner"
+          type="warning"
+          show-icon
+          :closable="false"
+          title="下游为 agent_token"
+          description="余额/类型/建任务/查询/下载可用。任务列表、订单、价目、公告、账单需把 .env 的 DATA818_TOKEN 换成带过期时间的登录 JWT。"
+        />
         <router-view />
       </el-main>
     </el-container>
@@ -92,7 +101,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Bell, Expand, Fold, Goods, List, Moon, Odometer, Plus, Setting, Sunny, Ticket, User, Wallet } from '@element-plus/icons-vue'
-import { balanceApi } from '@/api/meta'
+import { balanceApi, healthApi } from '@/api/meta'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
 
@@ -106,6 +115,7 @@ const router = useRouter()
 const collapsed = ref(false)
 const mobile = ref(false)
 const balanceRaw = ref<number | string | null>(null)
+const tokenKind = ref('')
 let timer: ReturnType<typeof setInterval> | undefined
 let mq: MediaQueryList | undefined
 
@@ -158,6 +168,15 @@ async function loadBalance() {
   }
 }
 
+async function loadHealth() {
+  try {
+    const h = await healthApi()
+    tokenKind.value = h.tokenKind || ''
+  } catch {
+    tokenKind.value = ''
+  }
+}
+
 function onLogout() {
   user.logout()
   router.replace({ name: 'login' })
@@ -181,6 +200,7 @@ onMounted(() => {
   collapsed.value = mq.matches ? true : readDesktopCollapse()
   mq.addEventListener('change', syncMobile)
   loadBalance()
+  loadHealth()
   timer = setInterval(loadBalance, 60000)
 })
 
@@ -292,6 +312,10 @@ onUnmounted(() => {
   min-height: 0;
   overflow: auto;
   padding: 1.5rem 1.75rem 2.75rem;
+}
+
+.token-banner {
+  margin-bottom: 1rem;
 }
 
 .aside-mask {
