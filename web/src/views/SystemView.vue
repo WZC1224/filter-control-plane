@@ -21,7 +21,8 @@
       <el-button size="small" @click="load">重试</el-button>
     </el-alert>
 
-    <el-card v-loading="loading" shadow="never" class="mb">
+    <div class="sys-stack">
+    <el-card v-loading="loading" shadow="never">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="服务">{{ health?.service || '-' }}</el-descriptions-item>
         <el-descriptions-item label="版本">
@@ -84,7 +85,7 @@
         description="暂无数据（下游三方接口失败或无权限时也会显示为空）"
       />
       <div v-else class="table-scroll">
-      <el-table :data="thirds" stripe max-height="calc(100dvh - 22rem)">
+      <el-table :data="thirds" stripe max-height="18rem">
         <el-table-column label="渠道" min-width="160">
           <template #default="{ row }">{{ row.thirdSourceName || '-' }}</template>
         </el-table-column>
@@ -94,6 +95,7 @@
       </el-table>
       </div>
     </el-card>
+    </div>
   </div>
 </template>
 
@@ -140,14 +142,6 @@ onMounted(load)
 </script>
 
 <style scoped lang="scss">
-.page-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
 .ml {
   margin-left: 0.5rem;
 }
@@ -158,7 +152,13 @@ onMounted(load)
   color: var(--el-text-color-secondary);
 }
 
-.mb {
-  margin-bottom: 1rem;
+.sys-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sys-stack > .mb {
+  margin-bottom: 0;
 }
 </style>

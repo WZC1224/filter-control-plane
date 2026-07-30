@@ -5,14 +5,14 @@
       <p class="page-sub">上传号码文件并提交到下游筛选</p>
     </header>
 
-    <el-card v-loading="loadingMeta" shadow="never">
+    <el-card v-loading="loadingMeta" shadow="never" class="form-card">
       <el-form
         :model="createForm"
         label-width="88px"
         label-position="right"
         @submit.prevent="onCreate"
       >
-        <el-row :gutter="16">
+        <el-row :gutter="24">
           <el-col :xs="24" :sm="12" :md="8">
             <el-form-item label="筛选类型" required>
               <el-select v-model="createForm.filterType" placeholder="选择类型" class="w-full" filterable>
@@ -255,9 +255,5 @@ onMounted(loadMeta)
 <style scoped lang="scss">
 .w-full {
   width: 100%;
-}
-
-.mb {
-  margin-bottom: 1rem;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="page-panel">
+  <div class="page-panel page-panel--fill">
     <header class="page-head">
       <div class="page-head-row">
         <div>
@@ -10,7 +10,7 @@
       </div>
     </header>
 
-    <el-card shadow="never" class="mb">
+    <el-card shadow="never" class="mb filter-card">
       <el-form :inline="true" :model="filters" @submit.prevent="onSearch">
         <el-form-item label="账单号">
           <el-input v-model="filters.billId" clearable style="width: 11rem" />
@@ -45,14 +45,14 @@
       <el-button size="small" @click="load">重试</el-button>
     </el-alert>
 
-    <el-card shadow="never">
-      <div class="table-scroll">
+    <el-card shadow="never" class="list-card">
+      <div ref="tableWrap" class="table-scroll table-scroll--fill">
       <el-table
         v-loading="loading"
         :data="bills"
         stripe
         class="click-table"
-        max-height="calc(100dvh - 15rem)"
+        :height="tableHeight"
         @row-click="onRowClick"
       >
         <el-table-column label="账单号" min-width="140">
@@ -115,6 +115,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { listBillsApi } from '@/api/notice'
 import { ledgerTypesApi, type LedgerTypeItem } from '@/api/meta'
 import { copyText } from '@/utils/clipboard'
+import { useTableFillHeight } from '@/composables/useTableFillHeight'
 import { compactQuery, qInt, qStr } from '@/utils/querySync'
 import type { BillItem } from '@/types/api'
 
@@ -127,6 +128,7 @@ const error = ref('')
 const total = ref(0)
 const pageNo = ref(1)
 const pageSize = ref(20)
+const { tableWrap, tableHeight } = useTableFillHeight()
 const filters = reactive({ billId: '', orderId: '', ledgerType: '' })
 
 function readQuery() {
@@ -214,20 +216,6 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.page-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.pager {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-}
-
 .link {
   color: var(--el-color-primary);
   text-decoration: none;
@@ -249,9 +237,5 @@ onMounted(async () => {
 
 :deep(.click-table .el-table__row) {
   cursor: pointer;
-}
-
-.mb {
-  margin-bottom: 1rem;
 }
 </style>

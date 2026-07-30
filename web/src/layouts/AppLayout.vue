@@ -62,7 +62,7 @@
     </el-aside>
 
     <el-container class="app-main-wrap">
-      <el-header class="app-header" height="56px">
+      <el-header class="app-header" height="60px">
         <el-button text class="collapse-btn" :aria-label="collapsed ? '展开侧栏' : '收起侧栏'" @click="toggleCollapse">
           <el-icon :size="18"><Fold v-if="!collapsed" /><Expand v-else /></el-icon>
         </el-button>
@@ -82,16 +82,20 @@
         <el-button text type="primary" @click="onLogout">退出</el-button>
       </el-header>
       <el-main class="app-main">
-        <el-alert
-          v-if="tokenBanner"
-          class="token-banner"
-          type="warning"
-          show-icon
-          :closable="false"
-          :title="tokenBanner.title"
-          :description="tokenBanner.desc"
-        />
-        <router-view />
+        <div class="app-main-inner">
+          <el-alert
+            v-if="tokenBanner"
+            class="token-banner"
+            type="warning"
+            show-icon
+            :closable="false"
+            :title="tokenBanner.title"
+            :description="tokenBanner.desc"
+          />
+          <div class="app-page">
+            <router-view />
+          </div>
+        </div>
       </el-main>
     </el-container>
   </el-container>
@@ -261,9 +265,9 @@ onUnmounted(() => {
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  height: 56px;
-  padding: 0 1rem;
+  gap: 0.75rem;
+  height: 60px;
+  padding: 0 1.15rem;
   border-bottom: 1px solid var(--app-brand-border);
 }
 
@@ -273,8 +277,8 @@ onUnmounted(() => {
 }
 
 .brand-mark {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.8rem;
+  height: 0.8rem;
   border-radius: 0.2rem;
   background: var(--el-color-primary);
   flex-shrink: 0;
@@ -289,8 +293,8 @@ onUnmounted(() => {
 
 .app-menu {
   border-right: none;
-  padding: 0.5rem 0;
-  height: calc(100% - 56px);
+  padding: 0.75rem 0.4rem;
+  height: calc(100% - 60px);
   overflow-y: auto;
 }
 
@@ -306,8 +310,9 @@ onUnmounted(() => {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0 1rem;
+  gap: 0.65rem;
+  height: 60px;
+  padding: 0 1.25rem;
   background: var(--app-header-bg);
   border-bottom: 1px solid var(--el-border-color-lighter);
   backdrop-filter: blur(8px);
@@ -335,11 +340,32 @@ onUnmounted(() => {
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
-  padding: 1.5rem 1.75rem 2.75rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem 1.25rem;
+}
+
+.app-main-inner {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-page {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .token-banner {
+  flex-shrink: 0;
   margin-bottom: 1rem;
 }
 
@@ -379,7 +405,7 @@ onUnmounted(() => {
   }
 
   .app-main {
-    padding: 1.125rem 1rem 2.25rem;
+    padding: 1.125rem 1rem 1rem;
   }
 
   .who {

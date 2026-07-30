@@ -1,5 +1,5 @@
 <template>
-  <div class="page-panel">
+  <div class="page-panel page-panel--fill">
     <header class="page-head">
       <div class="page-head-row">
         <div>
@@ -10,7 +10,7 @@
       </div>
     </header>
 
-    <el-card shadow="never" class="mb">
+    <el-card shadow="never" class="mb filter-card">
       <el-form :inline="true" :model="filters" @submit.prevent>
         <el-form-item label="应用">
           <el-select
@@ -44,15 +44,15 @@
       <el-button size="small" @click="load">重试</el-button>
     </el-alert>
 
-    <el-card shadow="never">
+    <el-card shadow="never" class="list-card">
       <template #header>
         <div class="list-header">
           <span class="section-title">产品价目</span>
           <span v-if="!loading" class="list-meta">显示 {{ filtered.length }} / {{ rows.length }}</span>
         </div>
       </template>
-      <div class="table-scroll">
-      <el-table v-loading="loading" :data="filtered" stripe max-height="calc(100dvh - 15rem)">
+      <div ref="tableWrap" class="table-scroll table-scroll--fill">
+      <el-table v-loading="loading" :data="filtered" stripe :height="tableHeight">
         <el-table-column label="应用" width="120" prop="applicationType" />
         <el-table-column label="业务" width="120" prop="businessType" />
         <el-table-column label="类型" width="140">
@@ -79,6 +79,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { productsApi, type ProductItem } from '@/api/meta'
+import { useTableFillHeight } from '@/composables/useTableFillHeight'
 import { compactQuery, qStr } from '@/utils/querySync'
 
 const route = useRoute()
@@ -86,6 +87,7 @@ const router = useRouter()
 const rows = ref<ProductItem[]>([])
 const loading = ref(false)
 const error = ref('')
+const { tableWrap, tableHeight } = useTableFillHeight()
 const filters = reactive({ app: '', q: '' })
 
 const appOptions = computed(() => {
@@ -145,28 +147,3 @@ onMounted(() => {
   load()
 })
 </script>
-
-<style scoped lang="scss">
-.page-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.list-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.list-meta {
-  font-size: 0.8125rem;
-  color: var(--el-text-color-secondary);
-}
-
-.mb {
-  margin-bottom: 1rem;
-}
-</style>

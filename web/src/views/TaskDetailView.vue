@@ -43,7 +43,8 @@
       <el-button size="small" @click="load">重试</el-button>
     </el-alert>
 
-    <el-card v-loading="loading" shadow="never" class="mb">
+    <div class="detail-stack">
+    <el-card v-loading="loading" shadow="never">
       <template v-if="summary">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="任务号">
@@ -84,7 +85,7 @@
       </template>
     </el-card>
 
-    <el-card shadow="never" class="mb">
+    <el-card shadow="never">
       <template #header>
         <h2 class="section-title">运维操作</h2>
       </template>
@@ -117,6 +118,7 @@
       <h2 class="raw-title">原始响应</h2>
       <pre class="detail-pre" tabindex="0">{{ detailText }}</pre>
     </el-card>
+    </div>
   </div>
 </template>
 
@@ -279,20 +281,6 @@ onUnmounted(stopPoll)
 </script>
 
 <style scoped lang="scss">
-.page-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.page-head-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
 .poll-hint {
   margin-left: 0.5rem;
   font-size: 0.75rem;
@@ -300,19 +288,20 @@ onUnmounted(stopPoll)
 }
 
 .ops-hint {
-  margin: 0 0 0.75rem;
+  margin: 0 0 1rem;
   font-size: 0.8125rem;
+  line-height: 1.5;
   color: var(--el-text-color-secondary);
 }
 
 .ops-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .raw-title {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.75rem;
   font-size: 0.9375rem;
   font-weight: 600;
 }
@@ -321,17 +310,13 @@ onUnmounted(stopPoll)
   margin: 0;
   max-height: 26rem;
   overflow: auto;
-  padding: 0.75rem;
+  padding: 1rem 1.1rem;
   font-size: 0.75rem;
-  line-height: 1.5;
+  line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-all;
   background: var(--el-fill-color-light);
   border-radius: var(--el-border-radius-base);
-}
-
-.mb {
-  margin-bottom: 1rem;
 }
 
 .copy-btn {

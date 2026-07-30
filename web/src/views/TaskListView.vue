@@ -1,5 +1,5 @@
 <template>
-  <div class="page-panel">
+  <div class="page-panel page-panel--fill">
     <header class="page-head">
       <div class="page-head-row">
         <div>
@@ -13,7 +13,7 @@
       </div>
     </header>
 
-    <el-card shadow="never" class="mb">
+    <el-card shadow="never" class="mb filter-card">
       <el-form :inline="true" :model="filters" @submit.prevent="onSearch">
         <el-form-item label="任务号">
           <el-input v-model="filters.taskNo" clearable placeholder="模糊/精确" style="width: 10rem" />
@@ -65,7 +65,7 @@
       <el-button size="small" @click="load">重试</el-button>
     </el-alert>
 
-    <el-card shadow="never">
+    <el-card shadow="never" class="list-card">
       <template #header>
         <div class="list-header">
           <span class="section-title">全部任务</span>
@@ -81,14 +81,14 @@
         <el-button type="primary" @click="$router.push({ name: 'task-create' })">新建任务</el-button>
       </el-empty>
       <template v-else>
-        <div class="table-scroll">
+        <div ref="tableWrap" class="table-scroll table-scroll--fill">
           <el-table
             v-loading="loading"
             :data="tasks"
             stripe
             class="task-table"
             aria-label="筛选任务表"
-            max-height="calc(100dvh - 15rem)"
+            :height="tableHeight"
             @row-click="onRowClick"
           >
           <el-table-column label="任务号" min-width="140">
@@ -219,6 +219,7 @@ import {
 import { promptObjectPath } from '@/utils/objectPath'
 import { copyText } from '@/utils/clipboard'
 import { compactQuery, qInt, qStatus, qStr } from '@/utils/querySync'
+import { useTableFillHeight } from '@/composables/useTableFillHeight'
 import {
   DOWNLOAD_FORMATS,
   countryCode,
@@ -241,6 +242,7 @@ const downloadingNo = ref('')
 const total = ref(0)
 const pageNo = ref(1)
 const pageSize = ref(20)
+const { tableWrap, tableHeight } = useTableFillHeight()
 let pollTimer: ReturnType<typeof setInterval> | undefined
 
 const filters = reactive<{
@@ -408,40 +410,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.page-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.page-head-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.list-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.list-meta {
-  font-size: 0.8125rem;
-  color: var(--el-text-color-secondary);
-}
-
-.pager {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-}
-
-.mb {
-  margin-bottom: 1rem;
-}
-
 .copy-btn {
   margin: 0;
   padding: 0;

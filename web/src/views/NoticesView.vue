@@ -77,14 +77,6 @@ onMounted(load)
 </script>
 
 <style scoped lang="scss">
-.page-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
 .notice-card {
   cursor: pointer;
   transition: border-color 0.15s ease;
@@ -108,9 +100,9 @@ onMounted(load)
 }
 
 .notice-meta {
-  margin: 0.35rem 0 0.75rem;
+  margin: 0.5rem 0 1rem;
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
   font-size: 0.75rem;
   color: var(--el-text-color-secondary);
 }
@@ -128,9 +120,5 @@ onMounted(load)
   font-size: 0.875rem;
   line-height: 1.55;
   color: var(--el-text-color-regular);
-}
-
-.mb {
-  margin-bottom: 1rem;
 }
 </style>

@@ -5,7 +5,8 @@
       <p class="page-sub">控制平面独立账号（不映射下游用户）</p>
     </header>
 
-    <el-card shadow="never" class="mb">
+    <div class="form-stack">
+    <el-card shadow="never" class="form-card">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="用户名">{{ user.username || '-' }}</el-descriptions-item>
         <el-descriptions-item label="登录态">
@@ -19,7 +20,7 @@
       </div>
     </el-card>
 
-    <el-card shadow="never">
+    <el-card shadow="never" class="form-card">
       <template #header>
         <h2 class="section-title">修改密码</h2>
       </template>
@@ -39,6 +40,7 @@
       </el-form>
       <p class="hint">多用户 RBAC / 与 data818 账号打通仍不做；仅本机控制台密码。</p>
     </el-card>
+    </div>
   </div>
 </template>
 
@@ -92,16 +94,13 @@ async function onChangePassword() {
 
 <style scoped lang="scss">
 .actions {
-  margin-top: 1rem;
+  margin-top: 1.25rem;
 }
 
 .hint {
-  margin: 0.5rem 0 0;
+  margin: 0.75rem 0 0;
   font-size: 0.8125rem;
+  line-height: 1.5;
   color: var(--el-text-color-secondary);
-}
-
-.mb {
-  margin-bottom: 1rem;
 }
 </style>

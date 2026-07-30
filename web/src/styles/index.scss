@@ -82,6 +82,107 @@ body,
   padding: 0 0.5rem;
 }
 
+/* 列表页：吃满主区剩余高度，表格在内部滚 */
+.page-panel--fill {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-panel--fill > .page-head,
+.page-panel--fill > .mb,
+.page-panel--fill > .el-alert,
+.page-panel--fill > .stat-row {
+  flex-shrink: 0;
+}
+
+.page-panel--fill > .dash-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow: hidden;
+}
+
+.page-panel--fill > .dash-main > .el-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-panel--fill > .dash-main > .chart-card {
+  flex: 1.15 1 0;
+}
+
+.page-panel--fill > .dash-main > .list-card {
+  flex: 1 1 0;
+}
+
+.page-panel--fill > .dash-main > .el-card > .el-card__header {
+  flex-shrink: 0;
+}
+
+.page-panel--fill > .dash-main > .el-card > .el-card__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+
+@media (max-width: 960px) {
+  .page-panel--fill > .dash-main {
+    overflow: auto;
+  }
+}
+
+.page-panel--fill > .list-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-panel--fill > .list-card > .el-card__header {
+  flex-shrink: 0;
+}
+
+.page-panel--fill > .list-card > .el-card__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* 覆盖下方 overflow-x:auto，否则纵轴被算成 auto，flex 缩不下去 */
+  overflow: hidden !important;
+}
+
+.page-panel--fill .table-scroll--fill {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.page-panel--fill .pager {
+  flex-shrink: 0;
+  margin-top: 1rem;
+  padding-top: 0.15rem;
+}
+
+/* 非填满页（详情/新建等）允许主区滚动 */
+.page-panel:not(.page-panel--fill) {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  height: 100%;
+}
+
 @media (min-width: 1280px) {
   .page-panel {
     padding: 0 1.5rem;
@@ -96,19 +197,34 @@ body,
 }
 
 .page-head {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.page-head-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.page-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .page-title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 600;
   line-height: 1.35;
   color: var(--el-text-color-primary);
 }
 
 .page-sub {
-  margin: 0.25rem 0 0;
+  margin: 0.35rem 0 0;
   font-size: 0.8125rem;
   color: var(--el-text-color-secondary);
 }
@@ -123,6 +239,75 @@ body,
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.8125rem;
+}
+
+.mb {
+  margin-bottom: 1.25rem;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.list-meta {
+  font-size: 0.8125rem;
+  color: var(--el-text-color-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 筛选项：少挤、多留白 */
+.filter-card > .el-card__body {
+  padding: 1.05rem 1.25rem 0.25rem !important;
+}
+
+.filter-card .el-form--inline .el-form-item {
+  margin-right: 1.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.page-panel--fill > .list-card > .el-card__header {
+  padding: 1rem 1.25rem;
+}
+
+.page-panel--fill > .list-card > .el-card__body {
+  padding: 0.85rem 1.25rem 1.15rem;
+}
+
+.pager {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 表单/详情页：卡片堆叠留白 */
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-stack > .mb {
+  margin-bottom: 0;
+}
+
+.form-card > .el-card__body {
+  padding: 1.35rem 1.5rem 1.25rem !important;
+}
+
+.form-card .el-form-item {
+  margin-bottom: 1.15rem;
+}
+
+.detail-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.detail-stack > .mb {
+  margin-bottom: 0;
 }
 
 /* 表格：限制在面板/视口内，横向与表体纵向可滚，不撑破主布局 */
@@ -178,4 +363,10 @@ body,
   --el-menu-active-color: var(--el-color-primary);
   --el-menu-hover-bg-color: var(--el-fill-color-light);
   --el-menu-border-color: transparent;
+}
+
+.app-menu .el-menu-item {
+  margin: 0.2rem 0.35rem;
+  height: 2.65rem;
+  border-radius: var(--el-border-radius-base);
 }

@@ -105,7 +105,7 @@ async function onSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   background:
     radial-gradient(ellipse 80% 60% at 50% 0%, var(--app-bg-accent) 0%, transparent 55%),
     linear-gradient(165deg, var(--app-login-top) 0%, var(--app-login-mid) 45%, var(--app-login-bottom) 100%);
@@ -113,35 +113,43 @@ async function onSubmit() {
 
 .theme-fab {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 1.25rem;
+  right: 1.25rem;
 }
 
 .login-main {
   width: 100%;
-  max-width: 24rem;
+  max-width: 26rem;
 }
 
 .login-card {
   border: 1px solid var(--el-border-color-lighter);
 }
 
+.login-card :deep(.el-card__header) {
+  padding: 1.5rem 1.5rem 0.85rem;
+}
+
+.login-card :deep(.el-card__body) {
+  padding: 0.85rem 1.5rem 1.5rem;
+}
+
 .login-title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 600;
   line-height: 1.4;
   color: var(--el-text-color-primary);
 }
 
 .login-sub {
-  margin: 0.25rem 0 0;
+  margin: 0.4rem 0 0;
   font-size: 0.8125rem;
   color: var(--el-text-color-secondary);
 }
 
 .login-btn {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 </style>

@@ -17,7 +17,7 @@
       <el-button size="small" @click="load">重试</el-button>
     </el-alert>
 
-    <el-card v-loading="loading" shadow="never">
+    <el-card v-loading="loading" shadow="never" class="form-card">
       <template v-if="notice">
         <div class="notice-head">
           <h2 class="notice-title">{{ notice.title }}</h2>
@@ -77,39 +77,27 @@ onMounted(load)
 </script>
 
 <style scoped lang="scss">
-.page-head-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.page-head-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
 .notice-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
 }
 
 .notice-title {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1.2rem;
   font-weight: 600;
+  line-height: 1.4;
 }
 
 .notice-meta {
-  margin: 0.5rem 0 1rem;
+  margin: 0.75rem 0 1.25rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.75rem;
+  gap: 1.25rem;
+  font-size: 0.8125rem;
   color: var(--el-text-color-secondary);
 }
 
@@ -118,12 +106,8 @@ onMounted(load)
   white-space: pre-wrap;
   word-break: break-word;
   font-family: inherit;
-  font-size: 0.875rem;
-  line-height: 1.55;
+  font-size: 0.9375rem;
+  line-height: 1.65;
   color: var(--el-text-color-regular);
-}
-
-.mb {
-  margin-bottom: 1rem;
 }
 </style>
