@@ -39,12 +39,26 @@ class Data818Adapter(DownstreamAdapter):
             raise _Exception(code or 502, payload.get('message') or f'{context} failed')
         return payload.get('result')
 
+    def _response_json(self, resp: httpx.Response, *, context: str) -> Any:
+        """下游偶发 SPA HTML / 空体时避免 JSONDecodeError 打成 500。"""
+        try:
+            payload = resp.json()
+        except ValueError as exc:
+            snippet = (resp.text or '')[:80].replace('\n', ' ')
+            raise _Exception(
+                502,
+                f'{context}: non-JSON body (HTTP {resp.status_code}) {snippet}',
+            ) from exc
+        return self._unwrap(payload, context=context)
+
     def _get(self, path: str, params: dict | None = None) -> Any:
         try:
             with httpx.Client(timeout=self.timeout) as client:
                 resp = client.get(f'{self.base}{path}', headers=self.headers, params=params or {})
                 resp.raise_for_status()
-                return self._unwrap(resp.json(), context=path)
+                return self._response_json(resp, context=path)
+        except _Exception:
+            raise
         except httpx.HTTPError as exc:
             raise _Exception(502, f'data818 GET {path}: {exc}') from exc
 
@@ -53,7 +67,9 @@ class Data818Adapter(DownstreamAdapter):
             with httpx.Client(timeout=self.timeout) as client:
                 resp = client.post(f'{self.base}{path}', headers=self.headers, json=body)
                 resp.raise_for_status()
-                return self._unwrap(resp.json(), context=path)
+                return self._response_json(resp, context=path)
+        except _Exception:
+            raise
         except httpx.HTTPError as exc:
             raise _Exception(502, f'data818 POST {path}: {exc}') from exc
 
@@ -67,7 +83,9 @@ class Data818Adapter(DownstreamAdapter):
                     files=files,
                 )
                 resp.raise_for_status()
-                return self._unwrap(resp.json(), context=path)
+                return self._response_json(resp, context=path)
+        except _Exception:
+            raise
         except httpx.HTTPError as exc:
             raise _Exception(502, f'data818 POST {path}: {exc}') from exc
 
