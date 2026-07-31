@@ -4,7 +4,7 @@
       <div class="page-head-row">
         <div>
           <h1 class="page-title">订单</h1>
-          <p class="page-sub">消费/订单流水（下游 /order/list）</p>
+          <p class="page-sub">管理端订单范围（下游 /admin/third_management/task_list）</p>
         </div>
         <el-button :loading="loading" @click="load">刷新</el-button>
       </div>
@@ -14,6 +14,9 @@
       <el-form :inline="true" :model="filters" @submit.prevent="onSearch">
         <el-form-item label="订单号">
           <el-input v-model="filters.orderId" clearable placeholder="orderId" style="width: 12rem" />
+        </el-form-item>
+        <el-form-item label="用户">
+          <el-input v-model="filters.username" clearable placeholder="username" style="width: 10rem" />
         </el-form-item>
         <el-form-item label="类型">
           <el-select
@@ -30,6 +33,19 @@
               :value="t.taskType"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="说明">
+          <el-input v-model="filters.description" clearable placeholder="模糊" style="width: 10rem" />
+        </el-form-item>
+        <el-form-item label="时间">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            start-placeholder="开始"
+            end-placeholder="结束"
+            style="width: 16rem"
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" native-type="submit">查询</el-button>
@@ -64,7 +80,7 @@
             <div class="id-cell" @click.stop>
               <router-link
                 class="mono link"
-                :to="{ name: 'task-detail', params: { taskNo: row.orderId } }"
+                :to="{ name: 'task-detail', params: { taskNo: taskLinkNo(row) }, query: { from: 'orders' } }"
               >
                 {{ row.orderId }}
               </router-link>
@@ -74,7 +90,11 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="类型" width="120" prop="taskType" />
+        <el-table-column label="用户" width="100" prop="userName" show-overflow-tooltip />
+        <el-table-column label="类型" width="120" prop="taskType" show-overflow-tooltip />
+        <el-table-column label="消费" width="72">
+          <template #default="{ row }">{{ consumeTypeText(row.consumeType) }}</template>
+        </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="statusType(row.consumeStatus)" size="small" effect="plain">
@@ -83,12 +103,15 @@
           </template>
         </el-table-column>
         <el-table-column label="数量" width="90">
-          <template #default="{ row }">{{ row.taskCount ?? '-' }}</template>
+          <template #default="{ row }">{{ intText(row.taskCount) }}</template>
         </el-table-column>
         <el-table-column label="实扣" width="100">
-          <template #default="{ row }">{{ row.actualDeduction ?? '-' }}</template>
+          <template #default="{ row }">{{ intText(row.actualDeduction) }}</template>
         </el-table-column>
-        <el-table-column label="渠道" width="110">
+        <el-table-column label="余额" width="100">
+          <template #default="{ row }">{{ intText(row.currentBalance) }}</template>
+        </el-table-column>
+        <el-table-column label="渠道" width="100">
           <template #default="{ row }">{{ row.thirdSource || '-' }}</template>
         </el-table-column>
         <el-table-column label="时间" min-width="160" prop="createTime" />
@@ -131,13 +154,30 @@ const error = ref('')
 const total = ref(0)
 const pageNo = ref(1)
 const pageSize = ref(20)
+const dateRange = ref<[string, string] | null>(null)
 const { tableWrap, tableHeight } = useTableFillHeight()
-const filters = reactive({ orderId: '', taskType: '' })
+const filters = reactive({
+  orderId: '',
+  username: '',
+  taskType: '',
+  description: '',
+})
+
+function consumeTypeText(v: number | undefined | null) {
+  if (v === -1) return '支出'
+  if (v === 1) return '收益'
+  return '-'
+}
 
 function readQuery() {
   const q = route.query
   filters.orderId = qStr(q, 'orderId')
+  filters.username = qStr(q, 'username')
   filters.taskType = qStr(q, 'taskType')
+  filters.description = qStr(q, 'description')
+  const begin = qStr(q, 'createTimeBegin')
+  const end = qStr(q, 'createTimeEnd')
+  dateRange.value = begin && end ? [begin, end] : null
   pageNo.value = qInt(q, 'pageNo', 1)
   pageSize.value = qInt(q, 'pageSize', 20)
 }
@@ -146,7 +186,11 @@ function writeQuery() {
   router.replace({
     query: compactQuery({
       orderId: filters.orderId,
+      username: filters.username,
       taskType: filters.taskType,
+      description: filters.description,
+      createTimeBegin: dateRange.value?.[0],
+      createTimeEnd: dateRange.value?.[1],
       pageNo: pageNo.value === 1 ? undefined : pageNo.value,
       pageSize: pageSize.value === 20 ? undefined : pageSize.value,
     }),
@@ -160,7 +204,11 @@ async function load() {
       pageNo: pageNo.value,
       pageSize: pageSize.value,
       orderId: filters.orderId || undefined,
+      username: filters.username || undefined,
       taskType: filters.taskType || undefined,
+      description: filters.description || undefined,
+      createTimeBegin: dateRange.value?.[0],
+      createTimeEnd: dateRange.value?.[1],
     })
     orders.value = result.data || []
     total.value = result.total ?? orders.value.length
@@ -180,7 +228,10 @@ function onSearch() {
 
 function onReset() {
   filters.orderId = ''
+  filters.username = ''
   filters.taskType = ''
+  filters.description = ''
+  dateRange.value = null
   pageNo.value = 1
   pageSize.value = 20
   writeQuery()
@@ -198,9 +249,23 @@ function onPageChange() {
   load()
 }
 
+/** 详情/下载 id = orderId（818 filter/business 均按 order_id）。 */
+function taskLinkNo(row: OrderItem): string {
+  return (row.orderId || row.taskNo || row.partitionId || '').trim()
+}
+
+/** 表格数字去小数（10178.000000 → 10178）。 */
+function intText(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === '') return '-'
+  const n = Number(value)
+  if (!Number.isFinite(n)) return String(value)
+  return String(Math.trunc(n))
+}
+
 function onRowClick(row: OrderItem) {
-  if (!row.orderId) return
-  router.push({ name: 'task-detail', params: { taskNo: row.orderId } })
+  const no = taskLinkNo(row)
+  if (!no) return
+  router.push({ name: 'task-detail', params: { taskNo: no }, query: { from: 'orders' } })
 }
 
 onMounted(async () => {

@@ -13,7 +13,7 @@
 | 图标 | 页面显式 import；**禁止** `main.ts` 全局注册全量 icons | 全量 icons 徒增 ~38 KB gzip |
 | 后端 | Flask + SQLAlchemy + Pydantic，分层对齐 data818 | 延续栈 |
 | 本地库 | SQLite | MVP 零运维 |
-| 下游 | **独占** `DOWNSTREAM=auto\|mock\|data818\|data_center` | 禁止并行双源；auto 优先 data_center 三件套 |
+| 下游 | **独占** `DOWNSTREAM=auto\|mock\|data818` | 仅 data818；已剥离 data-center |
 | 未配置下游 | `MockAdapter` | 本地可演示 |
 | 控制平面角色 | **admin / operator** | 独立账号；不映射 data818；见 `docs/phase2-users.md` |
 | 鉴权存储 | JWT 存 Pinia + `localStorage` | 内部工具简单；已知 XSS 可偷 Token（见残留） |
@@ -51,7 +51,7 @@
 | `POST /tasks/<taskNo>/close` | `POST /admin/third_management/task/close` |
 | `POST /tasks/<taskNo>/refund` | `POST /admin/third_management/task/refund` |
 | `POST /tasks/<taskNo>/retry` | `POST /admin/super/query/retry` |
-| `GET /orders` | `GET /order/list` |
+| `GET /orders` | `POST /admin/third_management/task_list`（管理范围；非 `/order/list` 本人流水） |
 | `GET /bills` | `POST /admin/bill/list` |
 | `GET /notices` | `GET /sys_msg/list` |
 | `GET /notices/<id>` | `GET /sys_msg/detail` |
@@ -63,12 +63,12 @@
 | `POST /auth/change-password` | 控制平面本地用户（不下发下游） |
 | `GET/POST /users` · `PATCH /users/<id>` | 控制平面用户管理（仅 admin） |
 
-data818 配置：`DATA818_BASE_URL` + `DATA818_TOKEN`（登录 JWT）+ `DATA818_AGENT_TOKEN`（agent）。  
-data_center 映射见 [`data-center-integration.md`](data-center-integration.md)。
+data818 配置：`DATA818_BASE_URL` + `DATA818_TOKEN`（登录 JWT）+ `DATA818_AGENT_TOKEN`（agent）。
+也可系统页热更新（`downstream_secrets.json`）。
 
 ## 薄平面增量（2026-07-30）
 
-只读价目、订单类型枚举、公告详情、剩余号导出。不做：源文件下载、充值、商品写、并行双下游、完整菜单级 RBAC、与 data818 账号打通。
+只读价目、订单类型枚举、公告详情、剩余号导出。不做：源文件下载、充值、商品写、第二下游、完整菜单级 RBAC、与 data818 账号打通。
 
 ## 角色（Phase 2）
 
@@ -83,11 +83,18 @@ data_center 映射见 [`data-center-integration.md`](data-center-integration.md)
 
 ### D-001 · 下游独占（非并行）
 
-- **Status:** Accepted · 2026-07-30
-- **Context:** 已有 data818；另有 data-center-backend。运营只需一个真源。并行双源带来余额/任务号冲突与运维复杂度。
-- **Decision:** `DOWNSTREAM=auto|mock|data818|data_center` 独占；`auto`：data_center 三件套齐优先，否则 data818，否则 mock。显式指定缺凭证 → **启动失败**（不静默回退）。
-- **Alternatives:** 并行路由按任务选源（拒：状态分裂）；启动缺凭证静默 Mock（拒：生产误跑 Mock）。
-- **Consequences:** 换源改 `.env` 重启；适配器共享 `FilterHttpAdapter` 路径表，差异留在薄封装。
+- **Status:** Superseded by D-008 · 2026-07-30
+- **Context:** 已有 data818；曾规划 data-center-backend 为第二源。
+- **Decision（原）：** `DOWNSTREAM=auto|mock|data818|data_center` 独占。
+- **Consequences:** 见 D-008。
+
+### D-008 · 剥离 data-center 下游
+
+- **Status:** Accepted · 2026-07-31
+- **Context:** 运营台只对接 data818；data-center 适配器增加维护面且未成主路径。
+- **Decision:** 删除 `DataCenterAdapter`、`DATA_CENTER_*`、相关测试/冒烟/文档。`DOWNSTREAM=auto|mock|data818`；`auto` = 配齐 DATA818 → data818，否则 mock。
+- **Alternatives:** 继续保留可选独占（拒：无使用价值、文档双轨）。
+- **Consequences:** 若将来再接其它后端，新开适配器与决策，不复活本剥离代码。
 
 ### D-002 · 控制平面独立账号与角色
 
@@ -128,6 +135,14 @@ data_center 映射见 [`data-center-integration.md`](data-center-integration.md)
 - **Decision:** unplugin 按需组件/样式；`el-config-provider` 中文；暗色仅保留 `dark/css-vars.css`；图标按页 import。
 - **Alternatives:** 保持全量（拒：已测过大）；换组件库（拒：与 818 前台同族价值更高）。
 - **Consequences:** 勿再在 `main.ts` 全量注册；新增组件靠模板/`ElMessage` 等解析器导入。
+
+### D-007 · 下游凭证热更新（系统页）
+
+- **Status:** Accepted · 2026-07-31
+- **Context:** 登录 JWT 会过期；改 `.env` 要重启，运维摩擦大。
+- **Decision:** admin 在系统页 `PUT /meta/downstream-secrets` 写入 `downstream_secrets.json`（gitignore）；启动与保存时叠到 `settings`，`get_adapter.cache_clear()` 热生效。空串清除覆盖、回退环境底。GET 仅脱敏。
+- **Alternatives:** 只改 `.env`（拒：要重启）；代登录自动刷新（拒：托管 818 密码，另开）。
+- **Consequences:** 文件优先于 `.env`；勿提交该 json。
 
 ## 已知残留（有意未改）
 

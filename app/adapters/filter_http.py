@@ -11,10 +11,10 @@ from app.utils.response import _Exception
 
 _FORMAT_PATH = {
     'csv': '/api/filter/get_csv',
-    'txt': '/api/filter/get_valid_txt',
-    'xlsx': '/api/filter/get_xlsx',
-    'invalid': '/api/filter/get_invalid_txt',
 }
+
+# 对齐 data818 GetDownloadPathByIdSchema.downloadType
+_BUSINESS_DOWNLOAD_TYPES = frozenset({'csv', 'txt', 'xlsx', 'parquet', 'zip'})
 
 
 class FilterHttpAdapter(DownstreamAdapter):
@@ -152,11 +152,49 @@ class FilterHttpAdapter(DownstreamAdapter):
             return self._tag(result)
         return {'taskNo': result, 'adapter': self.adapter_label}
 
+    def _lookup_admin_task(self, key: str) -> dict[str, Any] | None:
+        """管理端 task_list 按 taskNo / orderId / partitionId 精确回落（跨账号可见）。"""
+        needle = (key or '').strip()
+        if not needle:
+            return None
+        for field in ('taskNo', 'orderId', 'partitionId'):
+            try:
+                result = self._post_json(
+                    '/admin/third_management/task_list',
+                    {'pageNo': 1, 'pageSize': 5, field: needle},
+                )
+            except _Exception:
+                continue
+            rows: list[Any]
+            if isinstance(result, dict):
+                rows = result.get('data') or []
+            elif isinstance(result, list):
+                rows = result
+            else:
+                rows = []
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                if needle in {
+                    str(row.get('taskNo') or ''),
+                    str(row.get('orderId') or ''),
+                    str(row.get('partitionId') or ''),
+                }:
+                    return row
+        return None
+
     def query_task(self, task_no: str) -> dict[str, Any]:
-        result = self._get('/api/filter/task_query', {'taskNo': task_no})
-        if isinstance(result, dict):
-            return self._tag(result)
-        return {'result': result, 'adapter': self.adapter_label}
+        # /api/filter/task_query 仅 agent 本账号；订单页常点进他人单 → 管理端回退。
+        try:
+            result = self._get('/api/filter/task_query', {'taskNo': task_no})
+            if isinstance(result, dict):
+                return self._tag(result)
+            return {'result': result, 'adapter': self.adapter_label}
+        except _Exception as exc:
+            row = self._lookup_admin_task(task_no)
+            if row:
+                return self._tag(row)
+            raise exc
 
     def _filename_from_disposition(self, header: str | None, fallback: str) -> str:
         if not header:
@@ -175,16 +213,75 @@ class FilterHttpAdapter(DownstreamAdapter):
                 plain = part.split('=', 1)[1].strip().strip('"') or None
         return starred or plain or fallback
 
-    def get_download(self, task_no: str, *, fmt: DownloadFormat = 'csv') -> FilePayload:
-        path = _FORMAT_PATH.get(fmt)
-        if not path:
-            raise _Exception(422, f'不支持的 format: {fmt}')
+    def _resolve_order_id(self, task_no: str) -> str:
+        """开放筛选/业务下载的 id = order_id；管理端另有 partitionId 勿混淆。"""
+        needle = (task_no or '').strip()
+        if not needle:
+            return needle
+        row = self._lookup_admin_task(needle)
+        if row:
+            oid = str(row.get('orderId') or row.get('order_id') or '').strip()
+            if oid:
+                return oid
+        return needle
+
+    def _oss_public_url(self, object_path: str) -> str:
+        from config import settings
+
+        path = (object_path or '').strip()
+        if path.startswith('http://') or path.startswith('https://'):
+            return path
+        base = (settings.DATA818_OSS_PUBLIC_BASE or '').rstrip('/')
+        if not base:
+            raise _Exception(502, '未配置 DATA818_OSS_PUBLIC_BASE，无法拉取 OSS 文件')
+        return f'{base}/{path.lstrip("/")}'
+
+    def _download_via_business(self, order_id: str, fmt: str) -> FilePayload:
+        """POST /business/taskRecord/getDownloadPathById → OSS path → 拉文件。"""
+        raw = self._post_json(
+            '/business/taskRecord/getDownloadPathById',
+            {'id': order_id, 'downloadType': fmt},
+        )
+        object_path = ''
+        if isinstance(raw, str):
+            object_path = raw.strip()
+        elif isinstance(raw, dict):
+            object_path = str(
+                raw.get('object_path')
+                or raw.get('objectPath')
+                or raw.get('url')
+                or raw.get('path')
+                or ''
+            ).strip()
+        if not object_path:
+            raise _Exception(201, '暂无可下载数据')
+        url = self._oss_public_url(object_path)
+        try:
+            with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
+                resp = client.get(url)
+                resp.raise_for_status()
+                name = object_path.replace('\\', '/').rsplit('/', 1)[-1] or f'{order_id}.{fmt}'
+                filename = self._filename_from_disposition(
+                    resp.headers.get('content-disposition'),
+                    name,
+                )
+                return FilePayload(
+                    content=resp.content,
+                    content_type=resp.headers.get('content-type') or 'application/octet-stream',
+                    filename=filename,
+                )
+        except httpx.HTTPError as exc:
+            raise _Exception(502, f'拉取下载文件失败: {exc}') from exc
+
+    def _download_via_filter_csv(self, order_id: str) -> FilePayload:
+        """本账号 agent：GET /api/filter/get_csv（常 JSON + resultUrl）。"""
+        path = _FORMAT_PATH['csv']
         try:
             with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
                 resp = client.get(
                     f'{self.base}{path}',
                     headers=self._headers_for(path),
-                    params={'taskNo': task_no},
+                    params={'taskNo': order_id},
                 )
                 resp.raise_for_status()
                 content_type = (resp.headers.get('content-type') or '').lower()
@@ -211,17 +308,17 @@ class FilterHttpAdapter(DownstreamAdapter):
                     file_resp.raise_for_status()
                     filename = self._filename_from_disposition(
                         file_resp.headers.get('content-disposition'),
-                        f'{task_no}.{fmt}',
+                        f'{order_id}.csv',
                     )
                     return FilePayload(
                         content=file_resp.content,
-                        content_type=file_resp.headers.get('content-type') or 'application/octet-stream',
+                        content_type=file_resp.headers.get('content-type')
+                        or 'application/octet-stream',
                         filename=filename,
                     )
-
                 filename = self._filename_from_disposition(
                     resp.headers.get('content-disposition'),
-                    f'{task_no}.{fmt}',
+                    f'{order_id}.csv',
                 )
                 return FilePayload(
                     content=resp.content,
@@ -232,6 +329,21 @@ class FilterHttpAdapter(DownstreamAdapter):
             raise
         except httpx.HTTPError as exc:
             raise _Exception(502, f'{self.adapter_label} GET {path}: {exc}') from exc
+
+    def get_download(self, task_no: str, *, fmt: DownloadFormat = 'csv') -> FilePayload:
+        if fmt not in _BUSINESS_DOWNLOAD_TYPES:
+            raise _Exception(422, f'不支持的 format: {fmt}')
+        order_id = self._resolve_order_id(task_no)
+        # 运营台主路径：业务 getDownloadPathById（登录 JWT，可跨账号）
+        try:
+            return self._download_via_business(order_id, fmt)
+        except _Exception as biz_exc:
+            if fmt == 'csv':
+                try:
+                    return self._download_via_filter_csv(order_id)
+                except _Exception:
+                    raise biz_exc from None
+            raise
 
     def list_filter_types(self) -> list[dict[str, Any]]:
         result = self._get('/api/filter/type/get')
@@ -248,12 +360,14 @@ class FilterHttpAdapter(DownstreamAdapter):
         return {'balance': result, 'adapter': self.adapter_label}
 
     def close_task(self, task_no: str) -> dict[str, Any]:
-        self._post_json('/admin/third_management/task/close', {'orderId': task_no})
-        return {'taskNo': task_no, 'status': -1, 'adapter': self.adapter_label}
+        order_id = self._resolve_order_id(task_no)
+        self._post_json('/admin/third_management/task/close', {'orderId': order_id})
+        return {'taskNo': order_id, 'status': -1, 'adapter': self.adapter_label}
 
     def refund_task(self, task_no: str) -> dict[str, Any]:
-        self._post_json('/admin/third_management/task/refund', {'orderId': task_no})
-        return {'taskNo': task_no, 'status': -1, 'adapter': self.adapter_label}
+        order_id = self._resolve_order_id(task_no)
+        self._post_json('/admin/third_management/task/refund', {'orderId': order_id})
+        return {'taskNo': order_id, 'status': -1, 'adapter': self.adapter_label}
 
     def retry_task(self, task_no: str) -> dict[str, Any]:
         order_id: Any = int(task_no) if task_no.isdigit() else task_no
@@ -304,13 +418,29 @@ class FilterHttpAdapter(DownstreamAdapter):
         page_size: int = 20,
         order_id: str | None = None,
         task_type: str | None = None,
+        description: str | None = None,
+        username: str | None = None,
+        consume_type: int | None = None,
+        create_time_begin: str | None = None,
+        create_time_end: str | None = None,
     ) -> dict[str, Any]:
-        params: dict[str, Any] = {'pageNo': page_no, 'pageSize': page_size}
+        # 运营台要对齐 818 管理端可见范围，不用 /order/list（仅 Token 本人）。
+        # consumeType 管理端无此筛；个人流水接口才有，此处忽略以免 silent wrong filter。
+        _ = consume_type
+        body: dict[str, Any] = {'pageNo': page_no, 'pageSize': page_size}
         if order_id:
-            params['orderId'] = order_id
+            body['orderId'] = order_id
         if task_type:
-            params['taskType'] = task_type
-        result = self._get('/order/list', params)
+            body['taskType'] = task_type
+        if description:
+            body['description'] = description
+        if username:
+            body['username'] = username
+        if create_time_begin:
+            body['startDate'] = create_time_begin
+        if create_time_end:
+            body['endDate'] = create_time_end
+        result = self._post_json('/admin/third_management/task_list', body)
         if isinstance(result, dict):
             return self._tag(result)
         return {
@@ -408,7 +538,8 @@ class FilterHttpAdapter(DownstreamAdapter):
         ]
 
     def export_remaining(self, task_no: str) -> FilePayload | dict[str, Any]:
-        path = self._post_json('/business/taskRecord/exportRemainingPhone', {'id': task_no})
+        order_id = self._resolve_order_id(task_no)
+        path = self._post_json('/business/taskRecord/exportRemainingPhone', {'id': order_id})
         object_path = ''
         url = None
         if isinstance(path, str):
@@ -424,26 +555,34 @@ class FilterHttpAdapter(DownstreamAdapter):
         if not url:
             if not object_path:
                 raise _Exception(201, '无可导出剩余号')
-            return {
-                'objectPath': object_path,
-                'downloadable': False,
-                'adapter': self.adapter_label,
-            }
+            # 相对 OSS path：尝试公网拉取；失败则返回 path 供前端复制
+            try:
+                url = self._oss_public_url(object_path)
+            except _Exception:
+                return {
+                    'objectPath': object_path,
+                    'downloadable': False,
+                    'adapter': self.adapter_label,
+                }
         try:
             with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
                 resp = client.get(url)
                 resp.raise_for_status()
                 filename = self._filename_from_disposition(
                     resp.headers.get('content-disposition'),
-                    f'{task_no}-remaining.txt',
+                    f'{order_id}-remaining.txt',
                 )
                 return FilePayload(
                     content=resp.content,
                     content_type=resp.headers.get('content-type') or 'text/plain; charset=utf-8',
                     filename=filename,
                 )
-        except httpx.HTTPError as exc:
-            raise _Exception(502, f'拉取剩余号失败: {exc}') from exc
+        except httpx.HTTPError:
+            return {
+                'objectPath': object_path or url,
+                'downloadable': False,
+                'adapter': self.adapter_label,
+            }
 
 
 def flatten_product_tree(raw: Any) -> list[dict[str, Any]]:

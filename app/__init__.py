@@ -23,6 +23,9 @@ _SPA_API_ROOTS = frozenset({
 
 def create_app() -> Flask:
     settings.assert_production_safe()
+    from app.exts.downstream_secrets import recompute
+
+    recompute()
 
     app = Flask(__name__)
     app.config.from_object(settings)

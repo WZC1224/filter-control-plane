@@ -72,7 +72,7 @@
             <router-link
               v-if="row.bizId"
               class="mono link"
-              :to="{ name: 'task-detail', params: { taskNo: row.bizId } }"
+              :to="{ name: 'task-detail', params: { taskNo: row.bizId }, query: { from: 'bills' } }"
               @click.stop
             >
               {{ row.bizId }}
@@ -201,7 +201,7 @@ function onPageChange() {
 
 function onRowClick(row: BillItem) {
   if (!row.bizId) return
-  router.push({ name: 'task-detail', params: { taskNo: row.bizId } })
+  router.push({ name: 'task-detail', params: { taskNo: row.bizId }, query: { from: 'bills' } })
 }
 
 onMounted(async () => {

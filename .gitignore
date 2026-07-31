@@ -1,4 +1,5 @@
 .env
+downstream_secrets.json
 fcp.db
 *.db
 __pycache__/

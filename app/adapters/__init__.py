@@ -10,10 +10,6 @@ def get_adapter() -> DownstreamAdapter:
     name = settings.adapter_name
     if name == 'mock':
         return MockAdapter()
-    if name == 'data_center':
-        from app.adapters.data_center import DataCenterAdapter
-
-        return DataCenterAdapter()
     from app.adapters.data818 import Data818Adapter
 
     return Data818Adapter()

@@ -133,7 +133,7 @@
                 <el-button
                   link
                   type="primary"
-                  @click="$router.push({ name: 'task-detail', params: { taskNo: taskNo(row) } })"
+                  @click="$router.push({ name: 'task-detail', params: { taskNo: taskNo(row) }, query: { from: 'tasks' } })"
                 >
                   详情
                 </el-button>
@@ -343,7 +343,7 @@ function onPageChange() {
 function onRowClick(row: TaskItem) {
   const no = taskNo(row)
   if (no === '-') return
-  router.push({ name: 'task-detail', params: { taskNo: no } })
+  router.push({ name: 'task-detail', params: { taskNo: no }, query: { from: 'tasks' } })
 }
 
 async function onDownload(row: TaskItem, fmt: DownloadFormat) {

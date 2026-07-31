@@ -21,7 +21,6 @@ def health():
             'mock': name == 'mock',
             'tokenKind': settings.data818_token_kind,
             'hasAgentToken': settings.data818_has_agent_token,
-            'hasApiKey': settings.data_center_has_api_key,
             'time': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
         }
     )
@@ -74,3 +73,25 @@ def order_task_types():
 @login_required
 def ledger_types():
     return Success(result=TaskService.list_ledger_types())
+
+
+@bp.route('/downstream-secrets', methods=['GET'])
+@admin_required
+def get_downstream_secrets():
+    from app.exts.downstream_secrets import status
+
+    return Success(result=status())
+
+
+@bp.route('/downstream-secrets', methods=['PUT'])
+@admin_required
+def put_downstream_secrets():
+    from app.exts.downstream_secrets import update
+    from app.schema.auth import PatchDownstreamSecretsSchema
+
+    data = PatchDownstreamSecretsSchema(**(request.get_json(silent=True) or {}))
+    result = update(
+        data818_token=data.data818Token,
+        data818_agent_token=data.data818AgentToken,
+    )
+    return Success(message='下游凭证已更新', result=result)

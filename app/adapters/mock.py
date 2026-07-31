@@ -148,20 +148,26 @@ class MockAdapter(DownstreamAdapter):
         if fmt == 'txt':
             body = f"12015550100\n12015550101\n# mock {task_no}\n".encode('utf-8')
             return FilePayload(content=body, content_type='text/plain; charset=utf-8', filename=f'{task_no}.txt')
-        if fmt == 'invalid':
-            body = f"12015550999\n# mock invalid {task_no}\n".encode('utf-8')
-            return FilePayload(
-                content=body,
-                content_type='text/plain; charset=utf-8',
-                filename=f'{task_no}-invalid.txt',
-            )
         if fmt == 'xlsx':
-            # 假 xlsx：最小 ZIP/PK 头，仅供流式下载联调（非真 Office 文件）
             body = b'PK\x03\x04mock-xlsx-' + task_no.encode('ascii', errors='ignore')
             return FilePayload(
                 content=body,
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 filename=f'{task_no}.xlsx',
+            )
+        if fmt == 'parquet':
+            body = b'PAR1mock-parquet-' + task_no.encode('ascii', errors='ignore')
+            return FilePayload(
+                content=body,
+                content_type='application/octet-stream',
+                filename=f'{task_no}.parquet',
+            )
+        if fmt == 'zip':
+            body = b'PK\x03\x04mock-zip-' + task_no.encode('ascii', errors='ignore')
+            return FilePayload(
+                content=body,
+                content_type='application/zip',
+                filename=f'{task_no}.zip',
             )
         body = f'phone,status\n12015550100,valid\n12015550101,valid\n# mock {task_no}\n'.encode('utf-8')
         return FilePayload(content=body, content_type='text/csv; charset=utf-8', filename=f'{task_no}.csv')
@@ -252,27 +258,51 @@ class MockAdapter(DownstreamAdapter):
         page_size: int = 20,
         order_id: str | None = None,
         task_type: str | None = None,
+        description: str | None = None,
+        username: str | None = None,
+        consume_type: int | None = None,
+        create_time_begin: str | None = None,
+        create_time_end: str | None = None,
     ) -> dict[str, Any]:
         rows: list[dict[str, Any]] = []
         for t in self._tasks:
-            deduction = float(t.get('actualDeduction') or max(1, int(t.get('count') or 1)) * 0.01)
+            count = max(1, int(t.get('count') or 1))
+            unit = 0.01
+            deduction = float(t.get('actualDeduction') or count * unit)
             rows.append(
                 {
                     'orderId': t['taskNo'],
+                    'partitionId': f"part-{t['taskNo']}",
                     'userName': 'mock',
                     'taskType': t.get('taskType'),
+                    'consumeType': -1,
                     'consumeStatus': t.get('status'),
                     'taskCount': str(t.get('count') or 0),
+                    'unitPrice': f'{unit:.6f}',
+                    'balanceDeduction': f'{-deduction:.6f}',
                     'actualDeduction': f'{deduction:.2f}',
+                    'currentBalance': '100.00',
                     'createTime': t.get('createDate') or '',
                     'description': t.get('description') or '',
                     'thirdSource': 'mock',
+                    'countryCode': t.get('countryCode') or '',
+                    'taskNo': t.get('thirdTaskNo') or '',
                 }
             )
         if order_id:
             rows = [r for r in rows if order_id in str(r['orderId'])]
         if task_type:
             rows = [r for r in rows if r.get('taskType') == task_type]
+        if description:
+            rows = [r for r in rows if description in str(r.get('description') or '')]
+        if username:
+            rows = [r for r in rows if username in str(r.get('userName') or '')]
+        if consume_type is not None:
+            rows = [r for r in rows if r.get('consumeType') == consume_type]
+        if create_time_begin:
+            rows = [r for r in rows if str(r.get('createTime') or '') >= create_time_begin]
+        if create_time_end:
+            rows = [r for r in rows if str(r.get('createTime') or '')[:10] <= create_time_end[:10]]
         total = len(rows)
         start = (page_no - 1) * page_size
         return {

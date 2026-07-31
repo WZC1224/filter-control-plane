@@ -8,7 +8,7 @@
 - 一台 Windows 或 Linux 主机
 - Python 3.11+ · Node 20+（仅构建前端）
 - 同进程托管 API + `web/dist`（默认端口 `5100`）
-- 下游 `data818` 或 `data_center` 凭证已备好（或先 Mock 演示）
+- 下游 `data818` 凭证已备好（或先 Mock 演示）
 
 ## 发布步骤
 
@@ -32,7 +32,7 @@ curl -s http://127.0.0.1:5100/meta/health   # 启动后
 python main.py
 ```
 
-探活成功形如：`success: true`，`adapter` 为 `data818` / `data_center` / `mock`。
+探活成功形如：`success: true`，`adapter` 为 `data818` / `mock`。
 
 ## 生产必填（`.env`）
 
@@ -43,10 +43,12 @@ python main.py
 | `JWT_SECRET` | 强随机，与 SECRET 不同 |
 | `ADMIN_PASSWORD` | 强密码，**禁止** `admin123` |
 | `DATABASE_URL` | 例 `sqlite:////data/fcp.db`（绝对路径更稳） |
-| `DOWNSTREAM` | `data818` 或 `data_center`（勿生产裸 `mock` 对真实用户） |
-| 下游凭证 | data818 双 Token / data_center 三件套 |
+| `DOWNSTREAM` | `data818`（或 `auto`；勿生产裸 `mock` 对真实用户） |
+| 下游凭证 | data818 双 Token（也可系统页热更新） |
 
 可选：`HOST` `PORT` `CORS_ORIGINS` `APP_VERSION` · `LOGIN_RATE_LIMIT_MAX`（默认 20）· `LOGIN_RATE_WINDOW_SECONDS`（默认 300）· `TRUST_PROXY_HEADERS`（默认关；仅反向代理已剥伪造 `X-Forwarded-For` 时开）。
+
+下游 Token 也可在**系统页**热更新（写入 `downstream_secrets.json`，优先于 `.env`；已 gitignore）。过期后粘贴新 JWT 保存即可，一般**不必重启**。
 
 弱密钥 / 弱管理员密码 → **进程直接拒绝启动**。
 

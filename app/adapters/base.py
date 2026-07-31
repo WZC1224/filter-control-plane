@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, BinaryIO, Literal
 
-DownloadFormat = Literal['csv', 'txt', 'xlsx', 'invalid']
+DownloadFormat = Literal['csv', 'txt', 'xlsx', 'parquet', 'zip']
 
 
 @dataclass(frozen=True)
@@ -88,6 +88,11 @@ class DownstreamAdapter(ABC):
         page_size: int = 20,
         order_id: str | None = None,
         task_type: str | None = None,
+        description: str | None = None,
+        username: str | None = None,
+        consume_type: int | None = None,
+        create_time_begin: str | None = None,
+        create_time_end: str | None = None,
     ) -> dict[str, Any]:
         ...
 

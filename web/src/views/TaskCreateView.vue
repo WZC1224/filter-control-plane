@@ -97,7 +97,6 @@
             :loading="creating"
             :disabled="!!countOutOfRange"
             native-type="submit"
-            @click="onCreate"
           >
             提交任务
           </el-button>
@@ -223,14 +222,15 @@ async function loadMeta() {
     if (!createForm.countryCode && countries.value.length) {
       createForm.countryCode = countryCode(countries.value[0])
     }
-  } catch (e) {
-    ElMessage.error((e as { message?: string })?.message || '加载元数据失败')
+  } catch {
+    // http 拦截器已提示
   } finally {
     loadingMeta.value = false
   }
 }
 
 async function onCreate() {
+  if (creating.value) return
   if (!createForm.filterType || !createForm.countryCode) {
     ElMessage.warning('请选择筛选类型和国家')
     return

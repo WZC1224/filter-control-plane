@@ -45,6 +45,11 @@ class OrderListSchema(BaseModel):
     pageSize: int = Field(20, ge=1, le=100)
     orderId: Optional[str] = None
     taskType: Optional[str] = None
+    description: Optional[str] = None
+    username: Optional[str] = None
+    consumeType: Optional[int] = None
+    createTimeBegin: Optional[str] = None
+    createTimeEnd: Optional[str] = None
 
 
 class BillListSchema(BaseModel):
@@ -53,3 +58,10 @@ class BillListSchema(BaseModel):
     billId: Optional[str] = None
     orderId: Optional[str] = None
     ledgerType: Optional[str] = None
+
+
+class PatchDownstreamSecretsSchema(BaseModel):
+    """空字符串 = 清除文件覆盖（回退 .env）；省略 = 不改。"""
+
+    data818Token: Optional[str] = Field(None, max_length=8192)
+    data818AgentToken: Optional[str] = Field(None, max_length=8192)

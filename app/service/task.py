@@ -9,7 +9,7 @@ from app.schema.auth import TaskListSchema
 from app.utils.response import _Exception
 from config import settings
 
-_SUPPORTED_FORMATS = frozenset({'csv', 'txt', 'xlsx', 'invalid'})
+_SUPPORTED_FORMATS = frozenset({'csv', 'txt', 'xlsx', 'parquet', 'zip'})
 
 
 def safe_download_name(name: str | None, fallback: str) -> str:
@@ -28,9 +28,19 @@ def resolve_download_mimetype(content_type: str | None) -> str:
 
 
 def normalize_task(item: dict) -> dict:
-    """控制平面对外 Task 形（camelCase）。见 docs/api-contract.md。"""
+    """控制平面对外 Task 形（camelCase）。见 docs/api-contract.md。
+
+    data818 开放筛选 / 业务下载的 id = order_id；管理端行里另有 partitionId/taskNo，
+    对外 taskNo 优先 orderId，避免点进详情后下载用错号。
+    """
     return {
-        'taskNo': item.get('taskNo') or item.get('task_no') or item.get('orderId') or item.get('order_id') or '',
+        'taskNo': (
+            item.get('orderId')
+            or item.get('order_id')
+            or item.get('taskNo')
+            or item.get('task_no')
+            or ''
+        ),
         'taskName': item.get('taskName') or item.get('task_name') or '',
         'taskType': item.get('taskType') or item.get('task_type') or '',
         'country': item.get('country') or item.get('countryCode') or item.get('country_code') or '',
@@ -44,27 +54,64 @@ def normalize_task(item: dict) -> dict:
             else item.get('taskEffectiveQuantity')
         ),
         'count': item.get('count') if item.get('count') is not None else item.get('taskNumber'),
-        'createDate': item.get('createDate') or item.get('create_date') or '',
+        'createDate': (
+            item.get('createDate')
+            or item.get('create_date')
+            or item.get('createTime')
+            or item.get('create_time')
+            or ''
+        ),
         'description': item.get('description') or item.get('describe') or '',
+        'orderId': item.get('orderId') or item.get('order_id') or '',
+        'userName': item.get('userName') or item.get('username') or '',
+        'partitionId': item.get('partitionId') or item.get('partition_id') or '',
     }
 
 
 def normalize_order(item: dict) -> dict:
-    """控制平面对外 Order 形。"""
+    """控制平面对外 Order 形。
+
+    兼容两路下游：
+    - `/order/list` → Order.order_to（含 unitPrice / balanceDeduction）
+    - `/admin/third_management/task_list` → Order.to_all（含 taskStatus / accountExpend）
+    """
+    consume_status = item.get('consumeStatus')
+    if consume_status is None:
+        consume_status = item.get('taskStatus')
+    if consume_status is None:
+        consume_status = item.get('status')
+
     return {
         'orderId': item.get('orderId') or item.get('order_id') or '',
+        'partitionId': item.get('partitionId') or item.get('partition_id') or '',
         'userName': item.get('userName') or item.get('username') or '',
         'taskType': item.get('taskType') or item.get('task_type') or '',
-        'consumeStatus': (
-            item.get('consumeStatus')
-            if item.get('consumeStatus') is not None
-            else item.get('status')
+        'consumeType': (
+            item.get('consumeType')
+            if item.get('consumeType') is not None
+            else item.get('consume_type')
         ),
-        'taskCount': item.get('taskCount') or item.get('count') or item.get('taskNumber') or '',
-        'actualDeduction': item.get('actualDeduction') or item.get('actual_deduction') or '',
+        'consumeStatus': consume_status,
+        'taskCount': (
+            item.get('taskCount')
+            or item.get('taskNumber')
+            or item.get('count')
+            or ''
+        ),
+        'unitPrice': item.get('unitPrice') or item.get('unit_price') or '',
+        'balanceDeduction': item.get('balanceDeduction') or item.get('balance_deduction') or '',
+        'actualDeduction': (
+            item.get('actualDeduction')
+            or item.get('actual_deduction')
+            or item.get('accountExpend')
+            or ''
+        ),
+        'currentBalance': item.get('currentBalance') or item.get('current_balance') or '',
         'createTime': item.get('createTime') or item.get('create_date') or item.get('createDate') or '',
         'description': item.get('description') or '',
         'thirdSource': item.get('thirdSource') or item.get('third_source') or '',
+        'countryCode': item.get('countryCode') or item.get('country') or '',
+        'taskNo': item.get('taskNo') or item.get('task_no') or '',
     }
 
 
@@ -147,13 +194,12 @@ class TaskService:
     def download(task_no: str, *, fmt: str = 'csv'):
         fmt = (fmt or 'csv').strip().lower()
         if fmt not in _SUPPORTED_FORMATS:
-            raise _Exception(422, 'format 仅支持 csv / txt / xlsx / invalid')
+            raise _Exception(422, 'format 仅支持 csv / txt / xlsx / parquet / zip')
         payload: FilePayload = get_adapter().get_download(
             task_no, fmt=fmt  # type: DownloadFormat
         )
         mime = resolve_download_mimetype(payload.content_type)
-        ext = 'txt' if fmt == 'invalid' else fmt
-        filename = safe_download_name(payload.filename, f'{task_no}.{ext}')
+        filename = safe_download_name(payload.filename, f'{task_no}.{fmt}')
         return send_file(
             BytesIO(payload.content),
             mimetype=mime,
@@ -200,6 +246,11 @@ class TaskService:
             page_size=data.pageSize,
             order_id=data.orderId,
             task_type=data.taskType,
+            description=data.description,
+            username=data.username,
+            consume_type=data.consumeType,
+            create_time_begin=data.createTimeBegin,
+            create_time_end=data.createTimeEnd,
         )
         rows = result.get('data') or []
         result['data'] = [normalize_order(r) if isinstance(r, dict) else r for r in rows]

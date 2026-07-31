@@ -28,11 +28,10 @@ export function queryTaskApi(taskNo: string) {
 }
 
 export function downloadTaskApi(taskNo: string, format: DownloadFormat = 'csv') {
-  const ext = format === 'invalid' ? 'txt' : format
   return downloadBlob(
     `/tasks/${encodeURIComponent(taskNo)}/download`,
     { format },
-    `${taskNo}.${ext}`,
+    `${taskNo}.${format}`,
   )
 }
 
@@ -80,7 +79,6 @@ export async function exportRemainingApi(taskNo: string): Promise<{ objectPath?:
     if (data.result?.objectPath) {
       return { objectPath: data.result.objectPath }
     }
-    ElMessage.success(data.message || '已导出')
     return
   }
   const objectUrl = URL.createObjectURL(blob)

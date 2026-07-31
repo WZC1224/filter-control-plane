@@ -114,7 +114,7 @@
               <template #default="{ row }">
                 <router-link
                   class="mono link"
-                  :to="{ name: 'task-detail', params: { taskNo: row.taskNo } }"
+                  :to="{ name: 'task-detail', params: { taskNo: row.taskNo }, query: { from: 'dashboard' } }"
                   @click.stop
                 >
                   {{ row.taskNo }}
@@ -229,7 +229,7 @@ function goNotice(n: NoticeItem) {
 
 function onRecentClick(row: TaskItem) {
   if (!row.taskNo) return
-  router.push({ name: 'task-detail', params: { taskNo: row.taskNo } })
+  router.push({ name: 'task-detail', params: { taskNo: row.taskNo }, query: { from: 'dashboard' } })
 }
 
 function goTasks(taskStatus?: number) {

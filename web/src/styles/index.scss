@@ -175,12 +175,32 @@ body,
   padding-top: 0.15rem;
 }
 
-/* 非填满页（详情/新建等）允许主区滚动 */
+/* 非填满页（详情/系统等）允许主区滚动；细滚动条 */
 .page-panel:not(.page-panel--fill) {
   flex: 1;
   min-height: 0;
   overflow: auto;
   height: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--el-border-color) 85%, transparent) transparent;
+}
+
+.page-panel:not(.page-panel--fill)::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.page-panel:not(.page-panel--fill)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-panel:not(.page-panel--fill)::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--el-border-color) 90%, transparent);
+  border-radius: 999px;
+}
+
+.page-panel:not(.page-panel--fill)::-webkit-scrollbar-thumb:hover {
+  background: var(--el-text-color-secondary);
 }
 
 @media (min-width: 1280px) {
@@ -298,6 +318,18 @@ body,
 
 .form-card .el-form-item {
   margin-bottom: 1.15rem;
+  /* 多行控件（上传 tip / 说明）勿垂直居中，否则标签上方空一大块 */
+  align-items: flex-start;
+}
+
+.form-card .el-form-item__label {
+  height: auto;
+  line-height: 32px;
+  padding-top: 0;
+}
+
+.form-card .el-alert.mb {
+  margin-bottom: 0.75rem;
 }
 
 .detail-stack {
@@ -319,8 +351,6 @@ body,
 .page-panel .el-card__body {
   min-width: 0;
   max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .page-panel .table-scroll {

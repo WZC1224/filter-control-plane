@@ -51,7 +51,7 @@ Token 对应用户需能访问：
 | 元数据 | `GET /api/filter/type/get`、`GET /api/filter/country_info/get`、`GET /api/filter/get_balance` |
 | 统计 | `GET /business/statisticsForTable` |
 | 关单/退款/重试 | admin/super 路径（见 decisions） |
-| 订单 | `GET /order/list`、`GET /order/taskTypeList` |
+| 订单 | `POST /admin/third_management/task_list`（管理范围）、`GET /order/taskTypeList` |
 | 账单 | `POST /admin/bill/list` |
 | 公告 | `GET /sys_msg/list`、`GET /sys_msg/detail` |
 | 价目 | `GET /product/list` |

@@ -67,8 +67,6 @@ export interface HealthResult {
   tokenKind?: string
   /** 是否配置了 DATA818_AGENT_TOKEN */
   hasAgentToken?: boolean
-  /** data_center：是否配置了 DATA_CENTER_API_KEY */
-  hasApiKey?: boolean
   time?: string
 }
 
@@ -80,14 +78,21 @@ export interface BalanceResult {
 
 export interface OrderItem {
   orderId: string
+  partitionId?: string
   userName?: string
   taskType?: string
+  consumeType?: number
   consumeStatus?: number
   taskCount?: string | number
+  unitPrice?: string | number
+  balanceDeduction?: string | number
   actualDeduction?: string | number
+  currentBalance?: string | number
   createTime?: string
   description?: string
   thirdSource?: string
+  countryCode?: string
+  taskNo?: string
 }
 
 export interface OrderListResult {

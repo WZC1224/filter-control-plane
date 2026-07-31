@@ -14,7 +14,7 @@
 
 ### 用户故事
 
-1. 作为运营，我登录控制台后能看到任务列表与状态，而不必打开 data818 / data-center 两套后台。
+1. 作为运营，我登录控制台后能看到任务列表与状态，而不必打开 data818 后台。
 2. 作为运营，我能上传 `.txt`、选择筛选类型与国家并提交任务。
 3. 作为运营，我能查看任务详情，并获取结果下载信息/链接。
 4. 作为开发，未配置下游时可用 Mock 本地演示同一套 API/UI。
@@ -156,7 +156,7 @@ export function listTasksApi(params?: Record<string, string | number | undefined
 
 ### Ask first
 
-- 增加第二个下游（data-center-backend）
+- 增加第二个下游（已否决：data-center 已剥离，见 decisions D-008）
 - 换库（SQLite → MySQL）、引入 Redis/Mongo
 - 新增 npm/pip 大依赖或换 UI 库
 - 控制平面自建「任务主库」替代纯代理
@@ -203,7 +203,7 @@ export function listTasksApi(params?: Record<string, string | number | undefined
 | 下载体验 | **控制平面代理文件流** |
 | 账号模型 | **独立账号**；下游用 `DATA818_TOKEN` |
 | 联调 vs 测试优先 | 未明示 → Plan 默认：**先 Mock + pytest，再文件流下载，有 token 再联调** |
-| 第二下游 data-center | 仍暂缓；触发条件未定 |
+| 第二下游 | **已剥离**（D-008）；勿再接入 data-center 代码路径 |
 
 ---
 

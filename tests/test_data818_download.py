@@ -1,4 +1,6 @@
 """Data818 / FilterHttp 下载相关。"""
+import json
+
 import httpx
 import pytest
 
@@ -11,6 +13,11 @@ def data818_settings(monkeypatch):
     monkeypatch.setattr(settings, 'DATA818_BASE_URL', 'http://data818.test')
     monkeypatch.setattr(settings, 'DATA818_TOKEN', 'test-token')
     monkeypatch.setattr(settings, 'DATA818_TIMEOUT', 5.0)
+    monkeypatch.setattr(
+        settings,
+        'DATA818_OSS_PUBLIC_BASE',
+        'https://168filter.oss-cn-hongkong.aliyuncs.com',
+    )
 
 
 def _mock_client(monkeypatch, handler, *, follow_redirects: bool = False):
@@ -44,10 +51,24 @@ def test_filename_from_disposition_decodes_rfc5987(data818_settings):
 
 
 def test_get_download_follows_result_url(data818_settings, monkeypatch):
+    """业务 getDownloadPathById 失败时，csv 回退开放 get_csv + resultUrl。"""
     from app.adapters.data818 import Data818Adapter
 
     def handler(request: httpx.Request) -> httpx.Response:
         url = str(request.url)
+        path = request.url.path
+        if path.endswith('/business/taskRecord/getDownloadPathById'):
+            return httpx.Response(
+                200,
+                json={'code': 400, 'success': False, 'message': '任务不存在', 'result': None},
+                headers={'content-type': 'application/json'},
+            )
+        if path.endswith('/admin/third_management/task_list'):
+            return httpx.Response(
+                200,
+                json={'code': 200, 'success': True, 'message': 'ok', 'result': {'data': []}},
+                headers={'content-type': 'application/json'},
+            )
         if url.startswith('http://data818.test/api/filter/get_csv'):
             return httpx.Response(
                 200,
@@ -74,6 +95,62 @@ def test_get_download_follows_result_url(data818_settings, monkeypatch):
     adapter = Data818Adapter()
     payload = adapter.get_download('TASK-1', fmt='csv')
     assert payload.content == b'phone,status\n1,ok\n'
+    assert payload.filename == 'out.csv'
+
+
+def test_get_download_via_business_oss(data818_settings, monkeypatch):
+    """主路径：业务下载 path + OSS 公网拉取。"""
+    from app.adapters.data818 import Data818Adapter
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if path.endswith('/admin/third_management/task_list'):
+            return httpx.Response(
+                200,
+                json={
+                    'code': 200,
+                    'success': True,
+                    'result': {
+                        'data': [
+                            {
+                                'orderId': 'ORD-1',
+                                'taskNo': 'PART-9',
+                                'partitionId': 'PART-9',
+                                'taskStatus': 1,
+                            }
+                        ]
+                    },
+                },
+                headers={'content-type': 'application/json'},
+            )
+        if path.endswith('/business/taskRecord/getDownloadPathById'):
+            body = json.loads(request.content.decode())
+            assert body['id'] == 'ORD-1'
+            assert body['downloadType'] == 'csv'
+            return httpx.Response(
+                200,
+                json={
+                    'code': 200,
+                    'success': True,
+                    'message': 'ok',
+                    'result': '818-filter-server/out.csv',
+                },
+                headers={'content-type': 'application/json'},
+            )
+        if str(request.url).endswith('/818-filter-server/out.csv') or '818-filter-server/out.csv' in str(
+            request.url
+        ):
+            return httpx.Response(
+                200,
+                content=b'phone\n1\n',
+                headers={'content-type': 'text/csv'},
+            )
+        return httpx.Response(404, text=str(request.url))
+
+    _mock_client(monkeypatch, handler, follow_redirects=True)
+    adapter = Data818Adapter()
+    payload = adapter.get_download('PART-9', fmt='csv')
+    assert payload.content == b'phone\n1\n'
     assert payload.filename == 'out.csv'
 
 
@@ -151,6 +228,64 @@ def test_query_task_uses_agent_token(data818_settings, monkeypatch):
     assert out['adapter'] == 'data818'
     assert seen['taskNo'] == 'TASK-9'
     assert seen['auth'] == 'Bearer agent-tok'
+
+
+def test_query_task_falls_back_to_admin_list(data818_settings, monkeypatch):
+    """agent 报任务不存在时，用登录 JWT 查管理端 task_list（支持 orderId）。"""
+    from app.adapters.data818 import Data818Adapter
+
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        calls.append(path)
+        auth = request.headers.get('authorization', '')
+        if path.endswith('/api/filter/task_query'):
+            assert auth == 'Bearer agent-tok'
+            return httpx.Response(
+                200,
+                json={'code': 400, 'success': False, 'message': '任务不存在', 'result': None},
+                headers={'content-type': 'application/json'},
+            )
+        if path.endswith('/admin/third_management/task_list'):
+            assert auth == 'Bearer login-tok'
+            body = json.loads(request.content.decode())
+            assert body.get('orderId') == 'ORD-1' or body.get('taskNo') == 'ORD-1' or body.get(
+                'partitionId'
+            ) == 'ORD-1'
+            return httpx.Response(
+                200,
+                json={
+                    'code': 200,
+                    'success': True,
+                    'message': 'ok',
+                    'result': {
+                        'data': [
+                            {
+                                'orderId': 'ORD-1',
+                                'taskNo': 'TASK-REAL',
+                                'partitionId': 'TASK-REAL',
+                                'taskStatus': 1,
+                                'taskType': 'wsValid',
+                                'createTime': '2026-07-31 14:00:00',
+                            }
+                        ]
+                    },
+                },
+                headers={'content-type': 'application/json'},
+            )
+        return httpx.Response(404, json={'success': False})
+
+    _mock_client(monkeypatch, handler)
+    monkeypatch.setattr(settings, 'DATA818_AGENT_TOKEN', 'agent-tok')
+    monkeypatch.setattr(settings, 'DATA818_TOKEN', 'login-tok')
+    adapter = Data818Adapter()
+    out = adapter.query_task('ORD-1')
+    assert out['taskNo'] == 'TASK-REAL'
+    assert out['orderId'] == 'ORD-1'
+    assert out['taskStatus'] == 1
+    assert any(p.endswith('/api/filter/task_query') for p in calls)
+    assert any(p.endswith('/admin/third_management/task_list') for p in calls)
 
 
 def test_create_task_multipart_headers(data818_settings, monkeypatch):

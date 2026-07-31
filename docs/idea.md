@@ -5,7 +5,7 @@
 
 ## Problem Statement
 
-我们如何让业务/运营在一个新入口完成筛选主路径（下任务 → 跟进度 → 取结果），把 `data818` / `data-center-backend` 当下游能力，而不是再造第三套筛选中心？
+我们如何让业务/运营在一个新入口完成筛选主路径（下任务 → 跟进度 → 取结果），把 `data818` 当下游能力，而不是再造第三套筛选中心？
 
 ## Recommended Direction
 
@@ -19,14 +19,14 @@
 
 成功标准：
 
-- 运营主路径不再在 `data818` / `data-center` 两套后台之间来回切
+- 运营主路径不再依赖 data818 原生后台日常操作
 - 旧服务当 API/任务下游继续跑
 - 一个人、延续 Flask，先交付可日常用的 MVP
 
 ## Key Assumptions to Validate
 
 - [ ] 运营愿意换到新入口 —— 找 1 人试用主路径（清单：[`docs/pilot.md`](pilot.md)）
-- [x] 单下游（优先 `data818`）足够跑通 —— MVP 已接；`data_center` 为可选独占
+- [x] 单下游（`data818`）足够跑通 —— MVP 已接；data-center 已剥离（D-008）
 - [x] 任务状态能从现有 API/库可靠汇总 —— 列表/详情/统计已对接
 
 ## MVP Scope
@@ -50,7 +50,7 @@
 
 ## Open Questions
 
-- 第二下游（`data-center-backend`）适配的触发条件是什么？
+- 第二下游：已否决（D-008 剥离 data-center）；再加下游需新决策
 - 其余见 `docs/spec.md` · Open Questions（前端栈已定为 Vue3 + Element Plus）
 
 ## Decision Log

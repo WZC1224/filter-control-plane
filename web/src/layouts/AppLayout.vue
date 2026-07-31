@@ -30,10 +30,6 @@
           <el-icon><List /></el-icon>
           <span>任务列表</span>
         </el-menu-item>
-        <el-menu-item index="/tasks/create">
-          <el-icon><Plus /></el-icon>
-          <span>新建任务</span>
-        </el-menu-item>
         <el-menu-item index="/orders">
           <el-icon><Ticket /></el-icon>
           <span>订单</span>
@@ -108,7 +104,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Bell, Expand, Fold, Goods, List, Moon, Odometer, Plus, Setting, Sunny, Ticket, User, UserFilled, Wallet } from '@element-plus/icons-vue'
+import { Bell, Expand, Fold, Goods, List, Moon, Odometer, Setting, Sunny, Ticket, User, UserFilled, Wallet } from '@element-plus/icons-vue'
 import { balanceApi, healthApi } from '@/api/meta'
 import { useThemeStore } from '@/stores/theme'
 import { useUserStore } from '@/stores/user'
@@ -156,8 +152,7 @@ const asideWidth = computed(() => {
 
 const active = computed(() => {
   const p = route.path
-  if (p.startsWith('/tasks/create')) return '/tasks/create'
-  if (p.startsWith('/tasks/') && p !== '/tasks') return '/tasks'
+  if (p.startsWith('/tasks')) return '/tasks'
   if (p.startsWith('/notices/')) return '/notices'
   return p
 })

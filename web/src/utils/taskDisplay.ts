@@ -1,12 +1,14 @@
 import type { CountryItem, TaskItem } from '@/types/api'
 
-export type DownloadFormat = 'csv' | 'txt' | 'xlsx' | 'invalid'
+export type DownloadFormat = 'csv' | 'txt' | 'xlsx' | 'parquet' | 'zip'
 
+/** 对齐 data818 `getDownloadPathById.downloadType`（开放 get_valid_txt/xlsx 已废弃）。 */
 export const DOWNLOAD_FORMATS: { value: DownloadFormat; label: string }[] = [
   { value: 'csv', label: 'CSV' },
-  { value: 'txt', label: '有效 TXT' },
+  { value: 'txt', label: 'TXT' },
   { value: 'xlsx', label: 'XLSX' },
-  { value: 'invalid', label: '无效 TXT' },
+  { value: 'parquet', label: 'Parquet' },
+  { value: 'zip', label: 'ZIP' },
 ]
 
 export function countryCode(item: CountryItem) {

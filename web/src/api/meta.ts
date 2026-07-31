@@ -111,3 +111,36 @@ export function ledgerTypesApi() {
     method: 'get',
   })
 }
+
+export interface DownstreamSecretInfo {
+  configured: boolean
+  masked: string
+  kind: string
+  exp?: string | null
+  source: 'file' | 'env'
+}
+
+export interface DownstreamSecretsResult {
+  data818Token: DownstreamSecretInfo
+  data818AgentToken: DownstreamSecretInfo
+  filePath: string
+  adapter: string
+}
+
+export function downstreamSecretsApi() {
+  return request<DownstreamSecretsResult>({
+    url: '/meta/downstream-secrets',
+    method: 'get',
+  })
+}
+
+export function putDownstreamSecretsApi(body: {
+  data818Token?: string
+  data818AgentToken?: string
+}) {
+  return request<DownstreamSecretsResult>({
+    url: '/meta/downstream-secrets',
+    method: 'put',
+    data: body,
+  })
+}

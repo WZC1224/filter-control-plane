@@ -97,4 +97,4 @@ python main.py   # waitress 托管 API + web/dist，默认 :5100
 ## 明确不做
 
 充值 · 商品写 · 完整菜单级 RBAC · 重写筛号引擎（见 `docs/spec.md` Boundaries）。
-`data_center` 为可选独占下游，非并行双源。
+下游仅 **data818**（或 Mock），已剥离 data-center。

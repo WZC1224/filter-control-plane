@@ -7,7 +7,7 @@
           <p class="page-sub mono">{{ taskNoParam }}</p>
         </div>
         <div class="page-head-actions">
-          <el-button @click="$router.push({ name: 'tasks' })">返回列表</el-button>
+          <el-button @click="goBack">返回</el-button>
           <el-button :loading="loading" @click="load">刷新</el-button>
           <el-dropdown :disabled="!canDownload" trigger="click" @command="onDownload">
             <el-button type="primary" :disabled="!canDownload" :loading="downloading">
@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   queryTaskApi,
@@ -148,6 +148,7 @@ import { useUserStore } from '@/stores/user'
 
 const user = useUserStore()
 const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const downloading = ref(false)
 const exporting = ref(false)
@@ -160,6 +161,27 @@ let pollTimer: ReturnType<typeof setInterval> | undefined
 
 const taskNoParam = computed(() => String(route.params.taskNo || ''))
 const canDownload = computed(() => summary.value?.status === 1)
+
+const FROM_ROUTES: Record<string, string> = {
+  orders: 'orders',
+  bills: 'bills',
+  tasks: 'tasks',
+  dashboard: 'dashboard',
+}
+
+function goBack() {
+  const from = String(route.query.from || '')
+  const name = FROM_ROUTES[from]
+  if (name) {
+    router.push({ name })
+    return
+  }
+  if (window.history.length > 1) {
+    router.back()
+    return
+  }
+  router.push({ name: 'tasks' })
+}
 
 function stopPoll() {
   polling.value = false

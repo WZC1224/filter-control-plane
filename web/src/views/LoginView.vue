@@ -38,7 +38,6 @@
               type="password"
               show-password
               autocomplete="current-password"
-              @keyup.enter="onSubmit"
             />
           </el-form-item>
           <el-button
@@ -46,7 +45,6 @@
             native-type="submit"
             :loading="loading"
             class="login-btn"
-            @click="onSubmit"
           >
             登录
           </el-button>
@@ -82,6 +80,7 @@ const rules: FormRules = {
 }
 
 async function onSubmit() {
+  if (loading.value) return
   const ok = await formRef.value?.validate().catch(() => false)
   if (!ok) return
   loading.value = true

@@ -68,10 +68,18 @@ def test_download_xlsx_format(client, auth_headers):
     assert resp.data.startswith(b'PK')
 
 
-def test_download_invalid_format(client, auth_headers):
-    resp = client.get('/tasks/MOCK-1001/download?format=invalid', headers=auth_headers)
+def test_download_zip_format(client, auth_headers):
+    resp = client.get('/tasks/MOCK-1001/download?format=zip', headers=auth_headers)
     assert resp.status_code == 200
-    assert b'invalid' in resp.data
+    assert resp.data.startswith(b'PK')
+
+
+def test_download_rejects_legacy_invalid_format(client, auth_headers):
+    """invalid 已退役；无效号走 export-remaining。"""
+    resp = client.get('/tasks/MOCK-1001/download?format=invalid', headers=auth_headers)
+    data = resp.get_json()
+    assert data['success'] is False
+    assert data['code'] == 422
 
 
 def test_list_filter_by_status(client, auth_headers):
@@ -94,12 +102,12 @@ def test_meta_health(client):
     data = resp.get_json()
     assert data['success'] is True
     assert data['result']['service'] == 'filter-control-plane'
-    assert data['result']['adapter'] in ('mock', 'data818', 'data_center')
+    assert data['result']['adapter'] in ('mock', 'data818')
     assert data['result']['version']
     assert 'mock' in data['result']
     assert data['result']['tokenKind'] in ('none', 'agent', 'login', 'unknown')
     assert 'hasAgentToken' in data['result']
-    assert 'hasApiKey' in data['result']
+    assert 'hasApiKey' not in data['result']
     assert data['result']['time']
 
 
@@ -155,7 +163,13 @@ def test_list_orders(client, auth_headers):
     data = resp.get_json()
     assert data['success'] is True
     assert data['result']['total'] >= 1
-    assert data['result']['data'][0]['orderId']
+    row = data['result']['data'][0]
+    assert row['orderId']
+    assert 'unitPrice' in row
+    assert 'balanceDeduction' in row
+    assert 'currentBalance' in row
+    assert 'consumeType' in row
+    assert 'userName' in row
 
 
 def test_third_balances(client, auth_headers):

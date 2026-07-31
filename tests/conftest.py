@@ -2,20 +2,22 @@ import pytest
 
 from config import settings
 from app.adapters import get_adapter
+from app.exts import downstream_secrets as ds
 
 
 @pytest.fixture()
 def app(tmp_path, monkeypatch):
     db_file = tmp_path / 'test.db'
     uri = 'sqlite:///' + str(db_file).replace('\\', '/')
+    secrets_file = tmp_path / 'downstream_secrets.json'
+    monkeypatch.setattr(ds, 'SECRETS_PATH', secrets_file)
+    ds.set_env_baseline({k: '' for k in ds.SECRET_KEYS})
+
     monkeypatch.setattr(settings, 'SQLALCHEMY_DATABASE_URI', uri)
     monkeypatch.setattr(settings, 'DOWNSTREAM', 'auto')
     monkeypatch.setattr(settings, 'DATA818_BASE_URL', '')
     monkeypatch.setattr(settings, 'DATA818_TOKEN', '')
     monkeypatch.setattr(settings, 'DATA818_AGENT_TOKEN', '')
-    monkeypatch.setattr(settings, 'DATA_CENTER_BASE_URL', '')
-    monkeypatch.setattr(settings, 'DATA_CENTER_API_KEY', '')
-    monkeypatch.setattr(settings, 'DATA_CENTER_TOKEN', '')
     monkeypatch.setattr(settings, 'ADMIN_USERNAME', 'admin')
     monkeypatch.setattr(settings, 'ADMIN_PASSWORD', 'admin123')
     # 默认关登录限流，避免用例互相撞 429；专门测限流的用例自行打开
